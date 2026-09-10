@@ -453,6 +453,62 @@ table.log tbody tr:hover { background: var(--surface-2); }
 .paste-fallback .actions { margin-top: 8px; }
 
 footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 24px; }
+
+.mobile-sort-row { display: none; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mobile-sort-label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+.mobile-sort-select {
+  flex: 1; min-width: 0; padding: 7px 8px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary); font-size: 12.5px; font-family: inherit;
+}
+
+/* Below 860px, .board collapses to a single column, so filters and content
+   share the same column instead of sitting side by side. A sticky filters
+   panel in that layout floats over the content scrolling underneath it in
+   that same column — pin it only when there's a separate column for it to
+   stick within. Placed after the base .filters rule so it actually wins. */
+@media (max-width: 860px) {
+  .filters { position: static; top: auto; }
+}
+
+/* Phone-width overrides — placed last so they win the cascade regardless of
+   where the base rule they adjust lives above. Goal: nothing requires an
+   undiscoverable sideways scroll to be seen. */
+@media (max-width: 640px) {
+  /* Podium: shrink so all 3 places fit on screen without scrolling */
+  .podium-scroll { overflow-x: visible; }
+  .podium { gap: 8px; padding: 6px 0 0; justify-content: space-between; }
+  .podium-col { width: 31%; max-width: 108px; }
+  .podium-avatar { width: 38px; height: 38px; font-size: 13px; }
+  .podium-col.rank-1 .podium-avatar { width: 48px; height: 48px; font-size: 16px; }
+  .podium-name { font-size: 10.5px; }
+  .podium-value { font-size: 18px; }
+  .podium-value-unit { font-size: 8.5px; }
+  .podium-medal { width: 17px; height: 17px; }
+  .podium-icon { width: 16px; height: 16px; }
+
+  /* Sort control replaces click-to-sort table header on phones */
+  .mobile-sort-row { display: flex; }
+
+  /* Log table becomes stacked cards instead of a wide scrolling table —
+     every field visible without swiping sideways */
+  .table-scroll { overflow-x: visible; }
+  table.log { min-width: 0; width: 100%; }
+  table.log thead { display: none; }
+  table.log, table.log tbody, table.log tr, table.log td { display: block; width: auto; }
+  table.log tr {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 8px; background: var(--surface);
+  }
+  table.log tr:last-child { margin-bottom: 0; }
+  table.log td {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    padding: 5px 0; border: none; text-align: right;
+  }
+  table.log td::before {
+    content: attr(data-label); font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.3px; color: var(--text-muted); text-align: left; flex-shrink: 0;
+  }
+}
 </style>
 </head>
 <body>
@@ -503,9 +559,18 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
         <div class="panel-head">
           <div>
             <div class="panel-title">Registros de auditoria</div>
-            <div class="panel-sub">Log detalhado — clique no cabeçalho para ordenar</div>
+            <div class="panel-sub">Log detalhado — ordene pelo cabeçalho da tabela ou pelo campo abaixo</div>
           </div>
           <span class="tag" id="tableCount">0 registros</span>
+        </div>
+        <div class="mobile-sort-row">
+          <label for="mobileSortSelect" class="mobile-sort-label">Ordenar por</label>
+          <select id="mobileSortSelect" class="mobile-sort-select">
+            <option value="ts:desc">Data — mais recente</option>
+            <option value="ts:asc">Data — mais antiga</option>
+            <option value="auditor:asc">Auditor (A–Z)</option>
+            <option value="auditor:desc">Auditor (Z–A)</option>
+          </select>
         </div>
         <div class="table-scroll">
           <table class="log">
@@ -1067,22 +1132,26 @@ function renderTable(facets){
       renderTable(computeFacets());
     });
   });
+  const mobileSort = document.getElementById('mobileSortSelect');
+  const mobileSortVal = `${state.sort.key}:${state.sort.dir}`;
+  if ([...mobileSort.options].some(o => o.value === mobileSortVal)) mobileSort.value = mobileSortVal;
 
   if (!rows.length){
     body.innerHTML = `<tr><td colspan="${TABLE_COLS.length}"><div class="empty-state">Nenhum registro para os filtros selecionados.</div></td></tr>`;
     return;
   }
 
+  const L = TABLE_COLS.reduce((m,c) => (m[c.key]=c.label, m), {});
   body.innerHTML = rows.map(r => `
     <tr>
-      <td class="cell-mono">${fmtDateTime(r.ts)}</td>
-      <td>${r.auditor ? escapeHtml(r.auditor) : '<span class="cell-missing">não cadastrado</span>'}</td>
-      <td class="cell-mono">${escapeHtml(r.auditorMatricula)}</td>
-      <td>${r.auditado ? escapeHtml(r.auditado) : (r.auditadoMatricula ? '<span class="cell-missing">não cadastrado</span>' : '—')}</td>
-      <td class="cell-mono">${escapeHtml(r.auditadoMatricula || '—')}</td>
-      <td>${escapeHtml(r.oficina || '—')}</td>
-      <td>${escapeHtml(r.ute || '—')}</td>
-      <td class="cell-mono">${escapeHtml(r.linha || '—')}</td>
+      <td class="cell-mono" data-label="${L.ts}">${fmtDateTime(r.ts)}</td>
+      <td data-label="${L.auditor}">${r.auditor ? escapeHtml(r.auditor) : '<span class="cell-missing">não cadastrado</span>'}</td>
+      <td class="cell-mono" data-label="${L.auditorMatricula}">${escapeHtml(r.auditorMatricula)}</td>
+      <td data-label="${L.auditado}">${r.auditado ? escapeHtml(r.auditado) : (r.auditadoMatricula ? '<span class="cell-missing">não cadastrado</span>' : '—')}</td>
+      <td class="cell-mono" data-label="${L.auditadoMatricula}">${escapeHtml(r.auditadoMatricula || '—')}</td>
+      <td data-label="${L.oficina}">${escapeHtml(r.oficina || '—')}</td>
+      <td data-label="${L.ute}">${escapeHtml(r.ute || '—')}</td>
+      <td class="cell-mono" data-label="${L.linha}">${escapeHtml(r.linha || '—')}</td>
     </tr>
   `).join('');
 }
@@ -1417,6 +1486,11 @@ document.getElementById('importAuditsBtn').addEventListener('click', handleImpor
 document.getElementById('importEmpBtn').addEventListener('click', handleImportEmployees);
 document.getElementById('importAuditsFileBtn').addEventListener('click', () => document.getElementById('importAuditsFile').click());
 document.getElementById('importAuditsFile').addEventListener('change', handleAuditsFileSelect);
+document.getElementById('mobileSortSelect').addEventListener('change', (e) => {
+  const [key, dir] = e.target.value.split(':');
+  state.sort.key = key; state.sort.dir = dir;
+  renderTable(computeFacets());
+});
 
 initDb();
 </script>
