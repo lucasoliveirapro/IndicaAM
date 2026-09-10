@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Gemba AM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #eef0f4;
+  --surface: #ffffff;
+  --surface-2: #e4e8ee;
+  --border: #d7dce4;
+  --text-primary: #161c26;
+  --text-secondary: #545d6b;
+  --text-muted: #838c9b;
+  --brand: #1f4e79;
+  --brand-soft: #e7eef5;
+  --header-1: #123650;
+  --header-2: #1f4e79;
+  --highlight: #b85c00;
+  --highlight-soft: #fbe8d2;
+  --good: #0ca30c;
+  --warning: #b5790a;
+  --critical: #d03b3b;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #c98500;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --series-other: #9aa2b1;
+  --shadow: rgba(22,28,38,0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151b;
+    --surface: #1b1f27;
+    --surface-2: #20242e;
+    --border: #2c313d;
+    --text-primary: #eef1f6;
+    --text-secondary: #aab2c2;
+    --text-muted: #767f90;
+    --brand: #5b9bda;
+    --brand-soft: #16283a;
+    --header-1: #0a1c2c;
+    --header-2: #1c3f61;
+    --highlight: #f0a24d;
+    --highlight-soft: #3a2a17;
+    --good: #3fc23f;
+    --warning: #f0b429;
+    --critical: #f0726f;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #45443f;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #2fae2f;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --series-other: #656d7c;
+    --shadow: rgba(0,0,0,0.45);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151b;
+  --surface: #1b1f27;
+  --surface-2: #20242e;
+  --border: #2c313d;
+  --text-primary: #eef1f6;
+  --text-secondary: #aab2c2;
+  --text-muted: #767f90;
+  --brand: #5b9bda;
+  --brand-soft: #16283a;
+  --header-1: #0a1c2c;
+  --header-2: #1c3f61;
+  --highlight: #f0a24d;
+  --highlight-soft: #3a2a17;
+  --good: #3fc23f;
+  --warning: #f0b429;
+  --critical: #f0726f;
+  --chart-grid: #2c2c2a;
+  --chart-axis: #45443f;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #2fae2f;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --series-other: #656d7c;
+  --shadow: rgba(0,0,0,0.45);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app { max-width: 1280px; margin: 0 auto; padding: 0 20px 48px; }
+
+.topbar {
+  background: linear-gradient(180deg, var(--header-1), var(--header-2));
+  margin: 0 -20px 20px;
+  padding: 18px 20px;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 4px 18px var(--shadow);
+}
+.topbar-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark {
+  font-family: "Big Shoulders Display", sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: #123650;
+  background: #f4f6fa;
+  width: 52px; height: 52px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.brand h1 {
+  font-family: "Big Shoulders Display", sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+.brand .subtitle {
+  margin: 2px 0 0;
+  color: #d7e4f2;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+}
+.topbar-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.meta-pill {
+  font-size: 11.5px;
+  color: #eaf1fa;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: "IBM Plex Mono", monospace;
+}
+.btn {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-ghost {
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.32);
+  color: #ffffff;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.22); }
+.btn-solid {
+  background: var(--brand);
+  color: #ffffff;
+}
+.btn-solid:hover { filter: brightness(1.08); }
+.btn-outline {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.btn-outline:hover { border-color: var(--brand); color: var(--brand); }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.kpi-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px var(--shadow);
+}
+.kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.kpi-value {
+  font-family: "Big Shoulders Display", sans-serif;
+  font-weight: 700;
+  font-size: 34px;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-caption { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.board {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .board { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+.filters {
+  position: sticky; top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.filters-head { display: flex; align-items: center; justify-content: space-between; }
+.filters-title { font-weight: 700; font-size: 13px; }
+.clear-link {
+  font-size: 11.5px; color: var(--brand); cursor: pointer; background: none; border: none;
+  font-family: inherit; font-weight: 600; padding: 0;
+}
+.clear-link:hover { text-decoration: underline; }
+
+.filter-step { border-top: 1px dashed var(--border); padding-top: 12px; }
+.filter-step:first-of-type { border-top: none; padding-top: 0; }
+.step-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-muted); font-weight: 700; margin-bottom: 8px;
+}
+.step-num {
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--surface-2); color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.step-num.active { background: var(--brand); color: #fff; }
+.pill-list { display: flex; flex-direction: column; gap: 5px; }
+.pill {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+}
+.pill:hover { background: var(--surface-2); }
+.pill.active {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 600;
+}
+.pill-count {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.pill.active .pill-count { color: var(--brand); background: var(--brand-soft); }
+.date-inputs { display: flex; gap: 6px; margin-top: 6px; }
+.date-inputs input {
+  flex: 1; min-width: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11.5px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.content { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.panel-title { font-weight: 700; font-size: 15px; }
+.panel-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.empty-state { color: var(--text-muted); font-size: 13px; padding: 18px 0; text-align: center; }
+
+/* Ranking */
+.rank-row { display: grid; grid-template-columns: 26px 1fr 190px 56px; align-items: center; gap: 10px; padding: 7px 0; }
+.rank-num {
+  font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px;
+  color: var(--text-muted); text-align: center;
+}
+.rank-row.top1 .rank-num { color: var(--highlight); font-weight: 700; }
+.rank-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-name .mat { color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 11px; margin-left: 5px; }
+.rank-bar-track { height: 12px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.rank-bar-fill { height: 100%; border-radius: 4px; }
+.rank-count { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Podium */
+.podium-scroll { overflow-x: auto; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 22px; padding: 10px 8px 0; margin-bottom: 8px; min-width: min-content; }
+.podium-col { display: flex; flex-direction: column; align-items: center; width: 128px; }
+.podium-badge-row { position: relative; }
+.podium-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 19px;
+  border: 3px solid var(--surface);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.podium-col.rank-1 .podium-avatar { width: 64px; height: 64px; font-size: 22px; }
+.podium-medal {
+  position: absolute; top: -4px; right: -4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--critical); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; font-family: "IBM Plex Mono", monospace;
+  border: 2px solid var(--surface);
+}
+.podium-value {
+  font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 20px;
+  color: var(--text-primary); margin-top: 8px; font-variant-numeric: tabular-nums;
+}
+.podium-value-unit { font-size: 10.5px; color: var(--text-muted); font-weight: 500; margin-top: -2px; text-transform: uppercase; letter-spacing: 0.4px; }
+.podium-bar {
+  width: 100%; margin-top: 10px;
+  border-radius: 8px 8px 3px 3px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 10px 8px 12px;
+  gap: 6px;
+  position: relative;
+  box-sizing: border-box;
+}
+.podium-col.rank-1 .podium-bar { min-height: 118px; background: var(--highlight); }
+.podium-col.rank-2 .podium-bar { min-height: 88px; background: var(--brand); }
+.podium-col.rank-3 .podium-bar { min-height: 66px; background: var(--brand); opacity: 0.78; }
+.podium-icon { width: 22px; height: 22px; color: rgba(255,255,255,0.85); }
+.podium-name {
+  color: #fff; font-size: 11.5px; font-weight: 600; text-align: center;
+  padding: 2px 6px 0; line-height: 1.3; overflow-wrap: break-word; width: 100%;
+}
+.rank-list-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700; margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+/* Daily chart */
+.daily-scroll { overflow-x: auto; padding-bottom: 4px; }
+.chart-svg { display: block; }
+.chart-svg .grid-line { stroke: var(--chart-grid); stroke-width: 1; }
+.chart-svg .axis-line { stroke: var(--chart-axis); stroke-width: 1; }
+.chart-svg .axis-label { fill: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 10px; }
+.chart-svg .day-label { fill: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+.chart-svg .day-total { fill: var(--text-secondary); font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-svg .bar-seg { cursor: pointer; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+.legend-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.viz-tooltip {
+  position: fixed; z-index: 50; pointer-events: none;
+  background: var(--text-primary); color: var(--bg);
+  font-size: 11.5px; padding: 7px 10px; border-radius: 7px;
+  box-shadow: 0 4px 14px var(--shadow);
+  max-width: 220px; opacity: 0; transition: opacity 0.08s ease;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+.viz-tooltip.show { opacity: 1; }
+.viz-tooltip b { font-family: "IBM Plex Mono", monospace; }
+
+/* Table */
+.table-scroll { overflow-x: auto; }
+table.log { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+table.log th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--text-muted); font-weight: 700; padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; white-space: nowrap; user-select: none;
+}
+table.log th:hover { color: var(--brand); }
+table.log th .arrow { font-size: 9px; margin-left: 3px; opacity: 0.6; }
+table.log td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.log tbody tr:hover { background: var(--surface-2); }
+.cell-mono { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.cell-missing { color: var(--warning); font-style: italic; font-size: 11.5px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--text-secondary); }
+
+/* Import panel */
+.import-panel { margin-top: 20px; }
+.import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .import-grid { grid-template-columns: 1fr; } }
+.import-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.import-box h3 { margin: 0 0 4px; font-size: 13.5px; }
+.import-box .hint { font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
+.import-box textarea {
+  width: 100%; min-height: 110px; resize: vertical;
+  font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+  padding: 8px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary);
+}
+.import-box .actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.import-status { font-size: 11.5px; }
+.import-status.ok { color: var(--good); }
+.import-status.err { color: var(--critical); }
+
+.import-preview { margin-top: 10px; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: 10px 12px; }
+.import-preview .preview-counts { display: flex; flex-wrap: wrap; gap: 5px 16px; margin-bottom: 9px; font-size: 11.5px; color: var(--text-muted); }
+.import-preview .preview-counts .stat b { font-size: 13px; color: var(--text-primary); }
+.import-preview .preview-counts .stat.new b { color: var(--good); }
+.import-preview .preview-counts .stat.upd b { color: var(--brand); }
+.import-preview .preview-counts .stat.skip b { color: var(--warning); }
+.import-preview .preview-actions { display: flex; gap: 8px; }
+.import-preview .preview-actions button { padding: 6px 12px; font-size: 11.5px; }
+
+.file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.file-name { font-size: 11.5px; color: var(--text-muted); font-family: "IBM Plex Mono", monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.file-name.picked { color: var(--brand); }
+.paste-fallback { margin-top: 10px; }
+.paste-fallback summary { font-size: 11.5px; color: var(--text-muted); cursor: pointer; user-select: none; }
+.paste-fallback summary:hover { color: var(--brand); }
+.paste-fallback textarea { margin-top: 8px; }
+.paste-fallback .actions { margin-top: 8px; }
+
+footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 24px; }
+
+.mobile-sort-row { display: none; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mobile-sort-label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+.mobile-sort-select {
+  flex: 1; min-width: 0; padding: 7px 8px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-primary); font-size: 12.5px; font-family: inherit;
+}
+
+/* Below 860px, .board collapses to a single column, so filters and content
+   share the same column instead of sitting side by side. A sticky filters
+   panel in that layout floats over the content scrolling underneath it in
+   that same column — pin it only when there's a separate column for it to
+   stick within. Placed after the base .filters rule so it actually wins. */
+@media (max-width: 860px) {
+  .filters { position: static; top: auto; }
+}
+
+/* Phone-width overrides — placed last so they win the cascade regardless of
+   where the base rule they adjust lives above. Goal: nothing requires an
+   undiscoverable sideways scroll to be seen. */
+@media (max-width: 640px) {
+  /* Podium: shrink so all 3 places fit on screen without scrolling */
+  .podium-scroll { overflow-x: visible; }
+  .podium { gap: 8px; padding: 6px 0 0; justify-content: space-between; }
+  .podium-col { width: 31%; max-width: 108px; }
+  .podium-avatar { width: 38px; height: 38px; font-size: 13px; }
+  .podium-col.rank-1 .podium-avatar { width: 48px; height: 48px; font-size: 16px; }
+  .podium-name { font-size: 10.5px; }
+  .podium-value { font-size: 18px; }
+  .podium-value-unit { font-size: 8.5px; }
+  .podium-medal { width: 17px; height: 17px; }
+  .podium-icon { width: 16px; height: 16px; }
+
+  /* Sort control replaces click-to-sort table header on phones */
+  .mobile-sort-row { display: flex; }
+
+  /* Log table becomes stacked cards instead of a wide scrolling table —
+     every field visible without swiping sideways */
+  .table-scroll { overflow-x: visible; }
+  table.log { min-width: 0; width: 100%; }
+  table.log thead { display: none; }
+  table.log, table.log tbody, table.log tr, table.log td { display: block; width: auto; }
+  table.log tr {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 8px; background: var(--surface);
+  }
+  table.log tr:last-child { margin-bottom: 0; }
+  table.log td {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    padding: 5px 0; border: none; text-align: right;
+  }
+  table.log td::before {
+    content: attr(data-label); font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.3px; color: var(--text-muted); text-align: left; flex-shrink: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">AM</span>
+        <div>
+          <h1>Painel de Gemba <span style="color:#cfe0f2">AM</span></h1>
+          <p class="subtitle">Manutenção Autônoma — auditorias de condutor por SIS</p>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <span class="meta-pill" id="lastUpdated">carregando…</span>
+        <button class="btn btn-ghost" id="toggleImport">Atualizar dados</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="board">
+    <aside class="filters" id="filters"></aside>
+    <div class="content">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Ranking de auditores</div>
+            <div class="panel-sub">Quem mais está realizando o Gemba, no recorte selecionado</div>
+          </div>
+        </div>
+        <div id="ranking"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Atividade por dia</div>
+            <div class="panel-sub">Auditorias realizadas por dia, por auditor</div>
+          </div>
+        </div>
+        <div id="dailyChart"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Registros de auditoria</div>
+            <div class="panel-sub">Log detalhado — ordene pelo cabeçalho da tabela ou pelo campo abaixo</div>
+          </div>
+          <span class="tag" id="tableCount">0 registros</span>
+        </div>
+        <div class="mobile-sort-row">
+          <label for="mobileSortSelect" class="mobile-sort-label">Ordenar por</label>
+          <select id="mobileSortSelect" class="mobile-sort-select">
+            <option value="ts:desc">Data — mais recente</option>
+            <option value="ts:asc">Data — mais antiga</option>
+            <option value="auditor:asc">Auditor (A–Z)</option>
+            <option value="auditor:desc">Auditor (Z–A)</option>
+          </select>
+        </div>
+        <div class="table-scroll">
+          <table class="log">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="import-panel panel" id="importPanel" hidden>
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Atualizar dados</div>
+        <div class="panel-sub">Envie os dados exportados do Excel/Forms — fica salvo apenas neste navegador, não é compartilhado com outras pessoas que acessarem o link</div>
+      </div>
+    </div>
+    <div class="import-grid">
+      <div class="import-box">
+        <h3>Novas auditorias (Forms)</h3>
+        <div class="hint">Envie o arquivo .xlsx exportado do Forms (a planilha de respostas). O sistema reconhece automaticamente a aba e as colunas — Id, Hora de início, SUA MATRÍCULA, MATRÍCULA CONDUTOR, OFICINA, UTE, LINHA. Registros com o mesmo Id substituem os existentes.</div>
+        <div class="file-row">
+          <input type="file" id="importAuditsFile" accept=".xlsx,.xls,.csv" hidden>
+          <button class="btn btn-outline" type="button" id="importAuditsFileBtn">Selecionar planilha…</button>
+          <span class="file-name" id="importAuditsFileName">Nenhum arquivo selecionado</span>
+        </div>
+        <details class="paste-fallback">
+          <summary>ou cole os dados manualmente</summary>
+          <textarea id="importAuditsText" placeholder="Id&#9;Hora de início&#9;...&#9;SUA MATRÍCULA&#9;MATRÍCULA CONDUTOR&#9;OFICINA&#9;UTE&#9;...&#9;LINHA"></textarea>
+          <div class="actions">
+            <button class="btn btn-solid" id="importAuditsBtn">Importar texto colado</button>
+          </div>
+        </details>
+        <div class="actions">
+          <span class="import-status" id="importAuditsStatus"></span>
+        </div>
+        <div class="import-preview" id="importAuditsPreview" hidden></div>
+      </div>
+      <div class="import-box">
+        <h3>Base de colaboradores</h3>
+        <div class="hint">Cole a lista de Matrícula, Nome e Turno (como no arquivo baseDados). Aceita separação por tabulação, "|" ou ";". Usado para resolver os nomes a partir da matrícula.</div>
+        <textarea id="importEmpText" placeholder="Matricula&#9;Nome&#9;Turno"></textarea>
+        <div class="actions">
+          <button class="btn btn-solid" id="importEmpBtn">Importar colaboradores</button>
+          <span class="import-status" id="importEmpStatus"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS</footer>
+</div>
+
+<div class="viz-tooltip" id="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const EMPLOYEES_SEED = [{"matricula": "105176", "nome": "ADRIANO LUIS CORREIA", "turno": "2º TURNO FIXO"}, {"matricula": "110970", "nome": "ALAN MATHEUS DO NASCIMENTO DA PAZ", "turno": "3º TURNO FIXO"}, {"matricula": "123359", "nome": "ALDEMIR FELIX", "turno": "4X3 DIURNO"}, {"matricula": "101827", "nome": "ALEX BELARMINO DOS SANTOS", "turno": "1º TURNO FIXO"}, {"matricula": "132568", "nome": "ALFREDO HENRIQUE DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "92246", "nome": "ALLAN CRUZ DOS SANTOS", "turno": "TL"}, {"matricula": "127121", "nome": "ANA CLAUDIA FERNANDES DOS SANTOS", "turno": "4X3 DIURNO"}, {"matricula": "105858", "nome": "ANDERSON ALVES SILVA CAVALCANTI", "turno": "3º TURNO FIXO"}, {"matricula": "97984", "nome": "ANDERSON SOUZA DO NASCIMENTO", "turno": "TL"}, {"matricula": "110953", "nome": "ANDREW ELVYS DA SILVA BARROS", "turno": "3º TURNO FIXO"}, {"matricula": "101851", "nome": "ANTONIO MARQUES DE OLIVEIRA", "turno": "1º TURNO FIXO"}, {"matricula": "102227", "nome": "ARISTIDES CANDIDO DA SILVA NETO", "turno": "4X3 DIURNO"}, {"matricula": "92598", "nome": "BRUNO PAULO DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "103630", "nome": "CARLOS ALBERTO FERREIRA DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "97519", "nome": "CRISNILSON JOAO SIMOES DE ARAUJO", "turno": "1º TURNO FIXO"}, {"matricula": "116080", "nome": "CRISTIAN CARLOS ARAUJO DE LIMA", "turno": "2º TURNO FIXO"}, {"matricula": "100543", "nome": "DANIEL JOSE DA SILVA", "turno": "TL"}, {"matricula": "115134", "nome": "DANIEL VICTOR", "turno": "4X3 DIURNO"}, {"matricula": "92965", "nome": "DEBSON ALVES BATISTA", "turno": "2º TURNO FIXO"}, {"matricula": "133089", "nome": "DEIVISSON ANIZIO ALVES DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "102242", "nome": "DIEGO SANTANA RAMOS DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "115216", "nome": "DIOGO SANTANA SANTOS", "turno": "2º TURNO FIXO"}, {"matricula": "138947", "nome": "EDILSON MENEZES GUIMARAES", "turno": "TL"}, {"matricula": "105466", "nome": "EDNALDO BEZERRA DO NASCIMENTO JUNIOR", "turno": "2º TURNO FIXO"}, {"matricula": "104489", "nome": "EDUARDO RODRIGUES DE SOUSA", "turno": "3º TURNO FIXO"}, {"matricula": "100545", "nome": "EMERSON BASILIO DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "124973", "nome": "ERIC FERREIRA DE ARAUJO", "turno": "4X3 DIURNO"}, {"matricula": "101903", "nome": "ESDRAS SILVA MARINHO DE ANDRADE", "turno": "3º TURNO FIXO"}, {"matricula": "116004", "nome": "ESTHER DA SILVA SIQUEIRA", "turno": "3º TURNO FIXO"}, {"matricula": "93540", "nome": "EVANDRO JOAQUIM DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "99277", "nome": "EVERTON ELIAN FELIX DE OLIVEIRA", "turno": "3º TURNO FIXO"}, {"matricula": "110049", "nome": "FABIANA SILVEIRA DE SOUZA ARAUJO", "turno": "1º TURNO FIXO"}, {"matricula": "115141", "nome": "FABIO ALEXANDRE DA ROCHA JUNIOR", "turno": "2º TURNO FIXO"}, {"matricula": "105085", "nome": "FABIO FRANCA DE OLIVEIRA", "turno": "2º TURNO FIXO"}, {"matricula": "111038", "nome": "FELIPE AUGUSTO DO NASCIMENTO", "turno": "4X3 DIURNO"}, {"matricula": "101763", "nome": "FELIPE MATIAS DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "111106", "nome": "FERNANDA SOARES DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "114859", "nome": "FERNANDA TAVARES DO NASCIMENTO", "turno": "2º TURNO FIXO"}, {"matricula": "114861", "nome": "FLAVIO ANTONIO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "103723", "nome": "GABRIEL LUIZ DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "115093", "nome": "GRASIELA COSTA DOS SANTOS", "turno": "4X3 DIURNO"}, {"matricula": "103635", "nome": "IRIS ALVES DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "104420", "nome": "JACKSON ALVES DE FREITAS", "turno": "4X3 DIURNO"}, {"matricula": "105186", "nome": "JAKSON CARLOS CORREIA PAIVA", "turno": "2º TURNO FIXO"}, {"matricula": "116290", "nome": "JALYSON TAVARES DA CUNHA", "turno": "3º TURNO FIXO"}, {"matricula": "102141", "nome": "JAMESSON DOS SANTOS ALVES", "turno": "3º TURNO FIXO"}, {"matricula": "115154", "nome": "JANAINA REGINA", "turno": "4X3 DIURNO"}, {"matricula": "101859", "nome": "JOAO HENRIQUE BARROS DOS SANTOS", "turno": "3º TURNO FIXO"}, {"matricula": "105097", "nome": "JOAO PEDRO DE SOUZA OLIVEIRA", "turno": "3º TURNO FIXO"}, {"matricula": "105449", "nome": "JOAO VICTOR DO NASCIMENTO BARBOSA", "turno": "1º TURNO FIXO"}, {"matricula": "103651", "nome": "JOAO WILSON FERREIRA CHAVES JUNIOR", "turno": "2º TURNO FIXO"}, {"matricula": "106619", "nome": "JOELSON DA LUZ SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "98381", "nome": "JONATAN DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "105884", "nome": "JORGE BARRETO CORREIA", "turno": "4X3 DIURNO"}, {"matricula": "98568", "nome": "JOSE EVERSON JOVINIANO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "101770", "nome": "JOSE FELIPE ESPINOLA DE SOUZA", "turno": "4X3 DIURNO"}, {"matricula": "101891", "nome": "JOSE FERREIRA DA SILVA FILHO", "turno": "1º TURNO FIXO"}, {"matricula": "119166", "nome": "JOSE GILMAR SILVA JUNIOR", "turno": "3º TURNO FIXO"}, {"matricula": "100814", "nome": "JOSE MARCILIO DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "99009", "nome": "JOSELITO DA SILVA PONCIANO", "turno": "3º TURNO FIXO"}, {"matricula": "120652", "nome": "JOSIAS DE ASSIS", "turno": "4X3 DIURNO"}, {"matricula": "105481", "nome": "JOSUEL JOSE SAMPAIO", "turno": "1º TURNO FIXO"}, {"matricula": "102235", "nome": "JULIANO EDMILSON DE FREITAS SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "120188", "nome": "KARINA BEATRIZ VENCESLAU GOUVEIA", "turno": "1º TURNO FIXO"}, {"matricula": "111043", "nome": "KAUE EUFRASIO DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "108512", "nome": "LEONAN MARINHO DE ANDRADE", "turno": "2º TURNO FIXO"}, {"matricula": "120184", "nome": "LEONARDA ALMEIDA DOS SANTOS CARNEIRO", "turno": "2º TURNO FIXO"}, {"matricula": "103686", "nome": "LIDIANE MARIA DE LIRA ROCHA", "turno": "2º TURNO FIXO"}, {"matricula": "98397", "nome": "LUCAS OLIVEIRA DA SILVA", "turno": "TL"}, {"matricula": "104468", "nome": "LUIZ HENRIQUE LEMOS CARNEIRO", "turno": "TL"}, {"matricula": "101840", "nome": "MARCELO SOARES FEREIRA", "turno": "2º TURNO FIXO"}, {"matricula": "98499", "nome": "MARCOS ANTONIO DOS SANTOS SOUZA", "turno": "2º TURNO FIXO"}, {"matricula": "97219", "nome": "MARCOS AURELIO DA SILVA MAURICIO", "turno": "4X3 DIURNO"}, {"matricula": "104363", "nome": "MARILIA DUARTE DA COSTA", "turno": "1º TURNO FIXO"}, {"matricula": "106611", "nome": "MATEUS TALISSON OLIVEIRA DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "135003", "nome": "MATHEUS PEREIRA GOMES DOS SANTOS", "turno": "TL"}, {"matricula": "129647", "nome": "MATHEUS VALENTINO DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "105329", "nome": "MAURO DOS MONTES DE MENDONCA FILHO", "turno": "3º TURNO FIXO"}, {"matricula": "138941", "nome": "MAVISON VIANA DOS SANTOS", "turno": "TL"}, {"matricula": "108522", "nome": "NELSON FRANSICO GUEDES JUNIOR", "turno": "1º TURNO FIXO"}, {"matricula": "101606", "nome": "OTONIEL TOMÉ", "turno": "4X3 DIURNO"}, {"matricula": "111119", "nome": "PEDRO HENRIQUE DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "102526", "nome": "PEDRO HENRIQUE DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "93815", "nome": "PEDRO VIDAL MENDES", "turno": "1º TURNO FIXO"}, {"matricula": "99105", "nome": "RAFAEL ANTONIO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "124570", "nome": "RAFAELI MACEDO DE SOUZA", "turno": "4X3 DIURNO"}, {"matricula": "93950", "nome": "RENAN LUIZ DE OLIVEIRA SANTANA", "turno": "1º TURNO FIXO"}, {"matricula": "116289", "nome": "RENATA MAX MOURA", "turno": "2º TURNO FIXO"}, {"matricula": "100845", "nome": "ROGERIO MONTE DE LIMA DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "101908", "nome": "RONALDO DA SILVA VENCESLAU", "turno": "2º TURNO FIXO"}, {"matricula": "101912", "nome": "RONALDO JOAQUIM DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "108716", "nome": "RUBENS GABRIEL GUIMARAES DOS SANTOS", "turno": "2º TURNO FIXO"}, {"matricula": "105909", "nome": "SAMUEL MENDONCA DA CRUZ", "turno": "3º TURNO FIXO"}, {"matricula": "105910", "nome": "SAULO SEVERINO LIRA GALDINO", "turno": "1º TURNO FIXO"}, {"matricula": "108506", "nome": "SAVIO CUNHA MACEDO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "106625", "nome": "SEVERINO RAMOS DE LIMA FILHO", "turno": "1º TURNO FIXO"}, {"matricula": "102638", "nome": "TARCISIO DO NASCIMENTO SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "117379", "nome": "TATIANE ROCHA DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "116292", "nome": "THACIO LOPES DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "123375", "nome": "THIAGO DA SILVA GRANJEIRO", "turno": "4X3 DIURNO"}, {"matricula": "119829", "nome": "THIFANNY PALOMA FERREIRA DA CRUZ LIMA", "turno": "4X3 DIURNO"}, {"matricula": "92272", "nome": "UELISON MADEIRA DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "115930", "nome": "VALDEILSON AMARO DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "107383", "nome": "VALDIR FALCAO DE ARAUJO", "turno": "1º TURNO FIXO"}, {"matricula": "115908", "nome": "VANESSA MARIA DA SILVA FREITAS", "turno": "1º TURNO FIXO"}, {"matricula": "108525", "nome": "VANUZA MARGARIDA DA CRUZ", "turno": "1º TURNO FIXO"}, {"matricula": "106994", "nome": "VINICIUS LUIZ RABELO DE MELO", "turno": "4X3 DIURNO"}, {"matricula": "132228", "nome": "VITÓRIA LAYS COUTINHO DO BONFIM", "turno": "4X3 DIURNO"}, {"matricula": "99690", "nome": "WELDESON SANTOS DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "105914", "nome": "WELLINGTON ARRUDA DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "116287", "nome": "WILIANA MARIA DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "98198", "nome": "WILLIAM RAMON DE SANTANA ASSUNCAO", "turno": "1º TURNO FIXO"}];
+const RECORDS_SEED = [{"id": 1, "ts": "2026-03-21T14:45:24", "auditorMatricula": "98397", "auditadoMatricula": "98198", "oficina": "FUNILARIA", "ute": "UTE 1A", "linha": "PPA"}, {"id": 2, "ts": "2026-05-15T12:06:01", "auditorMatricula": "97582", "auditadoMatricula": "111119", "oficina": "FUNILARIA", "ute": "UTE 1B", "linha": "SCE"}, {"id": 3, "ts": "2026-05-15T14:37:44", "auditorMatricula": "135003", "auditadoMatricula": "98568", "oficina": "FUNILARIA", "ute": "UTE 1A", "linha": "AUC"}, {"id": 4, "ts": "2026-05-15T17:05:46", "auditorMatricula": "98397", "auditadoMatricula": "102227", "oficina": "FUNILARIA", "ute": "UTE 2", "linha": "PPP"}, {"id": 5, "ts": "2026-05-20T12:50:24", "auditorMatricula": "98397", "auditadoMatricula": "110049", "oficina": "FUNILARIA", "ute": "UTE 2", "linha": "PPCS"}, {"id": 6, "ts": "2026-07-27T14:35:06", "auditorMatricula": "104468", "auditadoMatricula": "93815", "oficina": "FUNILARIA", "ute": "UTE 1B", "linha": "SCE"}, {"id": 7, "ts": "2026-07-27T15:03:24", "auditorMatricula": "135003", "auditadoMatricula": "132568", "oficina": "FUNILARIA", "ute": "UTE 1A", "linha": "AUC"}, {"id": 8, "ts": "2026-09-03T10:41:47", "auditorMatricula": "89486", "auditadoMatricula": "89486", "oficina": "MONTAGEM", "ute": "UTE 1B", "linha": "FDA"}, {"id": 9, "ts": "2026-09-03T10:43:20", "auditorMatricula": "89486", "auditadoMatricula": "89486", "oficina": "FUNILARIA", "ute": "UTE 1A", "linha": "AUE"}, {"id": 10, "ts": "2026-09-04T14:35:54", "auditorMatricula": "92246", "auditadoMatricula": "117379", "oficina": "FUNILARIA", "ute": "UTE 2", "linha": "PRD"}];
+
+const SERIES_VARS = ['--series-1','--series-2','--series-3','--series-4','--series-5','--series-6','--series-7','--series-8'];
+
+function seriesColor(i){
+  if (i < SERIES_VARS.length) return getComputedStyle(document.documentElement).getPropertyValue(SERIES_VARS[i]).trim();
+  return getComputedStyle(document.documentElement).getPropertyValue('--series-other').trim();
+}
+
+function normMatricula(v){
+  if (v === null || v === undefined) return '';
+  return String(v).trim().replace(/\.0$/,'');
+}
+function stripAccents(s){ return s.normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function normKey(s){ return stripAccents(String(s||'')).toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+function parseFlexibleDate(raw){
+  if (!raw) return null;
+  raw = String(raw).trim();
+  let d = new Date(raw);
+  if (!isNaN(d.getTime()) && /\d{4}/.test(raw)) return d;
+  let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T]?(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?/);
+  if (m){
+    const [_, dd, mm, yyyy, hh='0', mi='0', ss='0'] = m;
+    d = new Date(+yyyy, +mm-1, +dd, +hh, +mi, +ss);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+function fmtDate(d){
+  if (!(d instanceof Date) || isNaN(d)) return '—';
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function fmtDateTime(d){
+  if (!(d instanceof Date) || isNaN(d)) return '—';
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+function dayKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function initials(name, matricula){
+  if (name){
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  }
+  const m = normMatricula(matricula);
+  return m ? m.slice(0,2) : '??';
+}
+
+const ICON_TROPHY = '<svg class="podium-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4M17 5h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4"/></svg>';
+const ICON_MEDAL = '<svg class="podium-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="m9 10.5-3-6.5h3l2 4M15 10.5l3-6.5h-3l-2 4"/><path d="M12 12.5v5"/></svg>';
+
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const state = {
+  employees: [],
+  records: [],
+  employeesUpdatedAt: null,
+  recordsUpdatedAt: null,
+  dbAvailable: false,
+  filters: { preset: 'all', dateFrom: null, dateTo: null, oficina: null, ute: null, auditor: null },
+  sort: { key: 'ts', dir: 'desc' },
+  empMap: new Map(),
+  auditorColorMap: new Map(),
+};
+
+function rebuildIndexes(){
+  state.empMap = new Map(state.employees.map(e => [normMatricula(e.matricula), e]));
+  const names = new Set();
+  state.records.forEach(r => names.add(normMatricula(r.auditorMatricula)));
+  const sorted = Array.from(names).filter(Boolean).sort((a,b) => {
+    const na = (state.empMap.get(a)||{}).nome || a;
+    const nb = (state.empMap.get(b)||{}).nome || b;
+    return na.localeCompare(nb, 'pt-BR');
+  });
+  state.auditorColorMap = new Map();
+  sorted.forEach((m, i) => state.auditorColorMap.set(m, i));
+}
+
+function employeeName(matricula){
+  const m = normMatricula(matricula);
+  if (!m) return null;
+  const e = state.empMap.get(m);
+  return e ? e.nome : null;
+}
+
+function dateBounds(){
+  const now = new Date();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23,59,59,999);
+  if (state.filters.preset === 'all') return [null, null];
+  if (state.filters.preset === '7'){
+    const from = new Date(now); from.setDate(from.getDate()-6); from.setHours(0,0,0,0);
+    return [from, todayEnd];
+  }
+  if (state.filters.preset === '30'){
+    const from = new Date(now); from.setDate(from.getDate()-29); from.setHours(0,0,0,0);
+    return [from, todayEnd];
+  }
+  if (state.filters.preset === 'month'){
+    const from = new Date(now.getFullYear(), now.getMonth(), 1);
+    return [from, todayEnd];
+  }
+  if (state.filters.preset === 'custom'){
+    const from = state.filters.dateFrom ? new Date(state.filters.dateFrom+'T00:00:00') : null;
+    const to = state.filters.dateTo ? new Date(state.filters.dateTo+'T23:59:59') : null;
+    return [from, to];
+  }
+  return [null, null];
+}
+
+function inDateRange(rec, from, to){
+  const d = new Date(rec.ts);
+  if (from && d < from) return false;
+  if (to && d > to) return false;
+  return true;
+}
+
+function passStage(rec, stage, from, to){
+  if (stage >= 1 && !inDateRange(rec, from, to)) return false;
+  if (stage >= 2 && state.filters.oficina && rec.oficina !== state.filters.oficina) return false;
+  if (stage >= 3 && state.filters.ute && rec.ute !== state.filters.ute) return false;
+  if (stage >= 4 && state.filters.auditor && normMatricula(rec.auditorMatricula) !== state.filters.auditor) return false;
+  return true;
+}
+
+function countBy(list, keyFn){
+  const m = new Map();
+  list.forEach(r => { const k = keyFn(r); m.set(k, (m.get(k)||0)+1); });
+  return m;
+}
+
+function computeFacets(){
+  const [from, to] = dateBounds();
+  const afterDate = state.records.filter(r => passStage(r, 1, from, to));
+  const oficinaCounts = countBy(afterDate, r => r.oficina || '—');
+
+  const afterOficina = afterDate.filter(r => passStage(r, 2, from, to));
+  const uteCounts = countBy(afterOficina, r => r.ute || '—');
+
+  const afterUte = afterOficina.filter(r => passStage(r, 3, from, to));
+  const auditorCounts = countBy(afterUte, r => normMatricula(r.auditorMatricula));
+
+  const final = afterUte.filter(r => passStage(r, 4, from, to));
+  return { from, to, oficinaCounts, uteCounts, auditorCounts, final };
+}
+
+function clearFrom(stage){
+  if (stage <= 1){ state.filters.oficina = null; }
+  if (stage <= 2){ state.filters.ute = null; }
+  if (stage <= 3){ state.filters.auditor = null; }
+}
+
+function renderFilters(facets){
+  const el = document.getElementById('filters');
+  const presets = [
+    ['all','Todos os registros'], ['7','Últimos 7 dias'], ['30','Últimos 30 dias'],
+    ['month','Este mês'], ['custom','Personalizado']
+  ];
+  const oficinaEntries = Array.from(facets.oficinaCounts.entries()).sort((a,b)=>b[1]-a[1]);
+  const uteEntries = Array.from(facets.uteCounts.entries()).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+  const auditorEntries = Array.from(facets.auditorCounts.entries()).sort((a,b)=>b[1]-a[1]);
+
+  const hasActive = state.filters.preset !== 'all' || state.filters.oficina || state.filters.ute || state.filters.auditor;
+
+  el.innerHTML = `
+    <div class="filters-head">
+      <span class="filters-title">Filtros</span>
+      ${hasActive ? '<button class="clear-link" id="clearFilters">Limpar tudo</button>' : ''}
+    </div>
+
+    <div class="filter-step">
+      <div class="step-label"><span class="step-num active">1</span>Período</div>
+      <div class="pill-list">
+        ${presets.map(([key,label]) => `
+          <button class="pill ${state.filters.preset===key?'active':''}" data-action="preset" data-value="${key}">
+            <span>${label}</span>
+          </button>`).join('')}
+      </div>
+      ${state.filters.preset==='custom' ? `
+        <div class="date-inputs">
+          <input type="date" id="dateFrom" value="${state.filters.dateFrom||''}">
+          <input type="date" id="dateTo" value="${state.filters.dateTo||''}">
+        </div>` : ''}
+    </div>
+
+    <div class="filter-step">
+      <div class="step-label"><span class="step-num ${state.filters.oficina?'active':''}">2</span>Oficina</div>
+      <div class="pill-list">
+        <button class="pill ${!state.filters.oficina?'active':''}" data-action="oficina" data-value="">
+          <span>Todas</span><span class="pill-count">${Array.from(facets.oficinaCounts.values()).reduce((a,b)=>a+b,0)}</span>
+        </button>
+        ${oficinaEntries.map(([key,count]) => `
+          <button class="pill ${state.filters.oficina===key?'active':''}" data-action="oficina" data-value="${escapeHtml(key)}">
+            <span>${escapeHtml(key)}</span><span class="pill-count">${count}</span>
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <div class="filter-step">
+      <div class="step-label"><span class="step-num ${state.filters.ute?'active':''}">3</span>UTE</div>
+      <div class="pill-list">
+        <button class="pill ${!state.filters.ute?'active':''}" data-action="ute" data-value="">
+          <span>Todas</span><span class="pill-count">${Array.from(facets.uteCounts.values()).reduce((a,b)=>a+b,0)}</span>
+        </button>
+        ${uteEntries.map(([key,count]) => `
+          <button class="pill ${state.filters.ute===key?'active':''}" data-action="ute" data-value="${escapeHtml(key)}">
+            <span>${escapeHtml(key)}</span><span class="pill-count">${count}</span>
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <div class="filter-step">
+      <div class="step-label"><span class="step-num ${state.filters.auditor?'active':''}">4</span>Auditor</div>
+      <div class="pill-list">
+        <button class="pill ${!state.filters.auditor?'active':''}" data-action="auditor" data-value="">
+          <span>Todos</span><span class="pill-count">${Array.from(facets.auditorCounts.values()).reduce((a,b)=>a+b,0)}</span>
+        </button>
+        ${auditorEntries.map(([key,count]) => `
+          <button class="pill ${state.filters.auditor===key?'active':''}" data-action="auditor" data-value="${escapeHtml(key)}">
+            <span>${escapeHtml(employeeName(key) || ('Matrícula '+key))}</span><span class="pill-count">${count}</span>
+          </button>`).join('')}
+      </div>
+    </div>
+  `;
+
+  el.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      const value = btn.dataset.value;
+      if (action === 'preset'){
+        state.filters.preset = value;
+        if (value !== 'custom'){ state.filters.dateFrom = null; state.filters.dateTo = null; }
+        clearFrom(1);
+      } else if (action === 'oficina'){
+        state.filters.oficina = value || null;
+        clearFrom(2);
+      } else if (action === 'ute'){
+        state.filters.ute = value || null;
+        clearFrom(3);
+      } else if (action === 'auditor'){
+        state.filters.auditor = value || null;
+      }
+      renderAll();
+    });
+  });
+  const clearBtn = document.getElementById('clearFilters');
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    state.filters = { preset: 'all', dateFrom: null, dateTo: null, oficina: null, ute: null, auditor: null };
+    renderAll();
+  });
+  const df = document.getElementById('dateFrom');
+  const dt = document.getElementById('dateTo');
+  if (df) df.addEventListener('change', () => { state.filters.dateFrom = df.value || null; clearFrom(1); renderAll(); });
+  if (dt) dt.addEventListener('change', () => { state.filters.dateTo = dt.value || null; clearFrom(1); renderAll(); });
+}
+
+function renderKPIs(facets){
+  const el = document.getElementById('kpis');
+  const list = facets.final;
+  const totalAuditorias = list.length;
+  const auditoresAtivos = new Set(list.map(r => normMatricula(r.auditorMatricula))).size;
+  const diasComAuditoria = new Set(list.map(r => dayKey(new Date(r.ts)))).size;
+  let periodo = '—';
+  if (list.length){
+    const dates = list.map(r => new Date(r.ts)).sort((a,b)=>a-b);
+    periodo = fmtDate(dates[0]) + ' – ' + fmtDate(dates[dates.length-1]);
+  }
+  el.innerHTML = `
+    <div class="kpi-tile">
+      <div class="kpi-label">Total de auditorias</div>
+      <div class="kpi-value">${totalAuditorias}</div>
+      <div class="kpi-caption">no recorte selecionado</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Auditores ativos</div>
+      <div class="kpi-value">${auditoresAtivos}</div>
+      <div class="kpi-caption">colaboradores que auditaram</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Dias com auditoria</div>
+      <div class="kpi-value">${diasComAuditoria}</div>
+      <div class="kpi-caption">dias distintos com registro</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Período coberto</div>
+      <div class="kpi-value" style="font-size:20px;">${periodo}</div>
+      <div class="kpi-caption">intervalo dos registros filtrados</div>
+    </div>
+  `;
+}
+
+function podiumColHtml(entry, rank){
+  if (!entry) return `<div class="podium-col rank-${rank}"></div>`;
+  const [matricula, count] = entry;
+  const colorIdx = state.auditorColorMap.has(matricula) ? state.auditorColorMap.get(matricula) : 999;
+  const color = seriesColor(colorIdx);
+  const name = employeeName(matricula);
+  const label = name || 'Matrícula não cadastrada';
+  const icon = rank === 1 ? ICON_TROPHY : ICON_MEDAL;
+  return `
+    <div class="podium-col rank-${rank}">
+      <div class="podium-badge-row">
+        <div class="podium-avatar" style="background:${color};" title="${escapeHtml(label)} — ${escapeHtml(matricula)}">${escapeHtml(initials(name, matricula))}</div>
+        <div class="podium-medal">${rank}º</div>
+      </div>
+      <div class="podium-value">${count}</div>
+      <div class="podium-value-unit">${count === 1 ? 'auditoria' : 'auditorias'}</div>
+      <div class="podium-bar">
+        ${icon}
+        <div class="podium-name">${escapeHtml(label)}</div>
+      </div>
+    </div>`;
+}
+
+function renderRanking(facets){
+  const el = document.getElementById('ranking');
+  const entries = Array.from(facets.auditorCounts.entries()).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length){ el.innerHTML = '<div class="empty-state">Nenhum registro para os filtros selecionados.</div>'; return; }
+
+  const podiumEntries = entries.slice(0,3);
+  const rest = entries.slice(3);
+  const max = entries[0][1];
+
+  let html = '<div class="podium-scroll"><div class="podium">'
+    + podiumColHtml(podiumEntries[1], 2)
+    + podiumColHtml(podiumEntries[0], 1)
+    + podiumColHtml(podiumEntries[2], 3)
+    + '</div></div>';
+
+  if (rest.length){
+    html += '<div class="rank-list-head">Demais colocações</div>';
+    html += rest.map(([matricula, count], i) => {
+      const colorIdx = state.auditorColorMap.has(matricula) ? state.auditorColorMap.get(matricula) : 999;
+      const color = seriesColor(colorIdx);
+      const name = employeeName(matricula) || ('Matrícula não cadastrada');
+      return `
+        <div class="rank-row">
+          <div class="rank-num">${i+4}º</div>
+          <div class="rank-name">${escapeHtml(name)}<span class="mat">${escapeHtml(matricula)}</span></div>
+          <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${(count/max*100).toFixed(0)}%; background:${color};"></div></div>
+          <div class="rank-count">${count}</div>
+        </div>`;
+    }).join('');
+  }
+
+  el.innerHTML = html;
+}
+
+/** A rounded-top, square-baseline stacked segment as an SVG path.
+ * r is clamped to half the segment's own height so thin slices don't
+ * self-intersect. */
+function roundedTopRectPath(x, y, w, h, r){
+  r = Math.max(0, Math.min(r, h, w/2));
+  if (r === 0) return `M${x},${y+h} L${x},${y} L${x+w},${y} L${x+w},${y+h} Z`;
+  return `M${x},${y+h} L${x},${y+r} Q${x},${y} ${x+r},${y} L${x+w-r},${y} Q${x+w},${y} ${x+w},${y+r} L${x+w},${y+h} Z`;
+}
+
+function renderDailyChart(facets){
+  const el = document.getElementById('dailyChart');
+  const list = facets.final;
+  if (!list.length){ el.innerHTML = '<div class="empty-state">Nenhum registro para os filtros selecionados.</div>'; return; }
+
+  const byDay = new Map();
+  list.forEach(r => {
+    const dk = dayKey(new Date(r.ts));
+    const auditor = normMatricula(r.auditorMatricula);
+    if (!byDay.has(dk)) byDay.set(dk, new Map());
+    const m = byDay.get(dk);
+    m.set(auditor, (m.get(auditor)||0)+1);
+  });
+  const days = Array.from(byDay.keys()).sort();
+  const dayTotals = days.map(dk => Array.from(byDay.get(dk).values()).reduce((a,b)=>a+b,0));
+  const niceMax = Math.max(...dayTotals, 1);
+  const auditorsPresent = new Set();
+  byDay.forEach(m => m.forEach((_,k) => auditorsPresent.add(k)));
+  const orderedAuditors = Array.from(auditorsPresent).sort((a,b) => (state.auditorColorMap.get(a)??999) - (state.auditorColorMap.get(b)??999));
+
+  // Layout constants (mark spec: bars capped thin; extra room becomes air
+  // between columns, never fatter bars).
+  const leftMargin = 28, rightPad = 18;
+  const barWidth = 20, colSlot = 58; // barWidth + gap between column centers
+  const topPad = 22, plotHeight = 140, axisLabelHeight = 20;
+  const gap = 2; // surface gap between stacked segments
+  const width = leftMargin + days.length * colSlot + rightPad;
+  const height = topPad + plotHeight + axisLabelHeight;
+  const baselineY = topPad + plotHeight;
+  const midVal = niceMax / 2;
+
+  const tooltips = []; // {x,y,w,h or path, text} collected then attached after innerHTML
+
+  let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">`;
+
+  // gridlines + y-axis labels (0, mid, max)
+  const yFor = v => baselineY - (v/niceMax)*plotHeight;
+  svg += `<line class="grid-line" x1="${leftMargin}" x2="${width-rightPad}" y1="${yFor(niceMax)}" y2="${yFor(niceMax)}"/>`;
+  svg += `<line class="grid-line" x1="${leftMargin}" x2="${width-rightPad}" y1="${yFor(midVal)}" y2="${yFor(midVal)}"/>`;
+  svg += `<text class="axis-label" x="${leftMargin-6}" y="${yFor(niceMax)+3}" text-anchor="end">${Math.round(niceMax)}</text>`;
+  svg += `<text class="axis-label" x="${leftMargin-6}" y="${baselineY+3}" text-anchor="end">0</text>`;
+
+  days.forEach((dk, i) => {
+    const m = byDay.get(dk);
+    const total = dayTotals[i];
+    const cx = leftMargin + i*colSlot + colSlot/2;
+    const barX = cx - barWidth/2;
+    const segAuditors = orderedAuditors.filter(a => m.has(a));
+    const n = segAuditors.length;
+    let cum = 0;
+    segAuditors.forEach((a, j) => {
+      const count = m.get(a);
+      const segH = (count/niceMax) * plotHeight;
+      const rawBottom = baselineY - cum;
+      const rawTop = rawBottom - segH;
+      cum += segH;
+      const adjTop = rawTop + (j < n-1 ? gap/2 : 0);
+      const adjBottom = rawBottom - (j > 0 ? gap/2 : 0);
+      const h = Math.max(1, adjBottom - adjTop);
+      const color = seriesColor(state.auditorColorMap.get(a) ?? 999);
+      const name = employeeName(a) || ('Matrícula '+a);
+      const d = new Date(dk+'T00:00:00');
+      const isTop = j === n-1;
+      const path = isTop ? roundedTopRectPath(barX, adjTop, barWidth, h, 4) : `M${barX},${adjTop+h} L${barX},${adjTop} L${barX+barWidth},${adjTop} L${barX+barWidth},${adjTop+h} Z`;
+      const tipId = 'seg_' + i + '_' + j;
+      svg += `<path id="${tipId}" class="bar-seg" d="${path}" style="fill:${color};"/>`;
+      tooltips.push({ id: tipId, text: `${name} — ${count} auditoria(s) em ${fmtDate(d)}` });
+    });
+    svg += `<text class="day-total" x="${cx}" y="${baselineY - cum - 8}" text-anchor="middle">${total}</text>`;
+    const d = new Date(dk+'T00:00:00');
+    svg += `<text class="day-label" x="${cx}" y="${baselineY + 15}" text-anchor="middle">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</text>`;
+  });
+
+  svg += `<line class="axis-line" x1="${leftMargin}" x2="${width-rightPad}" y1="${baselineY}" y2="${baselineY}"/>`;
+  svg += '</svg>';
+
+  const legendHtml = '<div class="legend">' + orderedAuditors.map(a => {
+    const color = seriesColor(state.auditorColorMap.get(a) ?? 999);
+    const name = employeeName(a) || ('Matrícula '+a);
+    return `<div class="legend-item"><span class="legend-swatch" style="background:${color};"></span>${escapeHtml(name)}</div>`;
+  }).join('') + '</div>';
+
+  el.innerHTML = `<div class="daily-scroll">${svg}</div>${legendHtml}`;
+
+  const tooltip = document.getElementById('tooltip');
+  tooltips.forEach(t => {
+    const node = document.getElementById(t.id);
+    if (!node) return;
+    node.addEventListener('mouseenter', () => { tooltip.textContent = t.text; tooltip.classList.add('show'); });
+    node.addEventListener('mousemove', (e) => { tooltip.style.left = (e.clientX+14)+'px'; tooltip.style.top = (e.clientY+14)+'px'; });
+    node.addEventListener('mouseleave', () => tooltip.classList.remove('show'));
+  });
+}
+
+const TABLE_COLS = [
+  {key:'ts', label:'Data/Hora'},
+  {key:'auditor', label:'Auditor'},
+  {key:'auditorMatricula', label:'Matrícula'},
+  {key:'auditado', label:'Auditado'},
+  {key:'auditadoMatricula', label:'Matrícula Aud.'},
+  {key:'oficina', label:'Oficina'},
+  {key:'ute', label:'UTE'},
+  {key:'linha', label:'Linha'},
+];
+
+function renderTable(facets){
+  const head = document.getElementById('tableHead');
+  const body = document.getElementById('tableBody');
+  const countEl = document.getElementById('tableCount');
+  let rows = facets.final.map(r => ({
+    ts: new Date(r.ts),
+    auditor: employeeName(r.auditorMatricula) || '',
+    auditorMatricula: normMatricula(r.auditorMatricula),
+    auditado: employeeName(r.auditadoMatricula) || '',
+    auditadoMatricula: normMatricula(r.auditadoMatricula) || '',
+    oficina: r.oficina || '',
+    ute: r.ute || '',
+    linha: r.linha || '',
+  }));
+
+  rows.sort((a,b) => {
+    let va = a[state.sort.key], vb = b[state.sort.key];
+    if (va instanceof Date) { va = va.getTime(); vb = vb.getTime(); }
+    else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+    const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+    return state.sort.dir === 'asc' ? cmp : -cmp;
+  });
+
+  countEl.textContent = rows.length + (rows.length === 1 ? ' registro' : ' registros');
+
+  head.innerHTML = '<tr>' + TABLE_COLS.map(c => `
+    <th data-key="${c.key}">${c.label}${state.sort.key===c.key ? `<span class="arrow">${state.sort.dir==='asc'?'▲':'▼'}</span>` : ''}</th>
+  `).join('') + '</tr>';
+  head.querySelectorAll('th').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (state.sort.key === key) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+      else { state.sort.key = key; state.sort.dir = 'desc'; }
+      renderTable(computeFacets());
+    });
+  });
+  const mobileSort = document.getElementById('mobileSortSelect');
+  const mobileSortVal = `${state.sort.key}:${state.sort.dir}`;
+  if ([...mobileSort.options].some(o => o.value === mobileSortVal)) mobileSort.value = mobileSortVal;
+
+  if (!rows.length){
+    body.innerHTML = `<tr><td colspan="${TABLE_COLS.length}"><div class="empty-state">Nenhum registro para os filtros selecionados.</div></td></tr>`;
+    return;
+  }
+
+  const L = TABLE_COLS.reduce((m,c) => (m[c.key]=c.label, m), {});
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td class="cell-mono" data-label="${L.ts}">${fmtDateTime(r.ts)}</td>
+      <td data-label="${L.auditor}">${r.auditor ? escapeHtml(r.auditor) : '<span class="cell-missing">não cadastrado</span>'}</td>
+      <td class="cell-mono" data-label="${L.auditorMatricula}">${escapeHtml(r.auditorMatricula)}</td>
+      <td data-label="${L.auditado}">${r.auditado ? escapeHtml(r.auditado) : (r.auditadoMatricula ? '<span class="cell-missing">não cadastrado</span>' : '—')}</td>
+      <td class="cell-mono" data-label="${L.auditadoMatricula}">${escapeHtml(r.auditadoMatricula || '—')}</td>
+      <td data-label="${L.oficina}">${escapeHtml(r.oficina || '—')}</td>
+      <td data-label="${L.ute}">${escapeHtml(r.ute || '—')}</td>
+      <td class="cell-mono" data-label="${L.linha}">${escapeHtml(r.linha || '—')}</td>
+    </tr>
+  `).join('');
+}
+
+function updateLastUpdated(){
+  const el = document.getElementById('lastUpdated');
+  const parts = [];
+  if (state.recordsUpdatedAt) parts.push('auditorias: ' + fmtDateTime(new Date(state.recordsUpdatedAt)));
+  if (state.employeesUpdatedAt) parts.push('colaboradores: ' + fmtDateTime(new Date(state.employeesUpdatedAt)));
+  el.textContent = parts.length ? 'Atualizado — ' + parts.join(' · ') : 'Dados iniciais carregados';
+}
+
+function renderAll(){
+  const facets = computeFacets();
+  renderKPIs(facets);
+  renderFilters(facets);
+  renderRanking(facets);
+  renderDailyChart(facets);
+  renderTable(facets);
+  updateLastUpdated();
+}
+
+function rebuildDerivedAndRender(){
+  rebuildIndexes();
+  renderAll();
+}
+
+/* ---------- Import parsing ---------- */
+function detectDelimiter(line){
+  if (line.includes('\t')) return '\t';
+  if (line.includes(';')) return ';';
+  if (line.split(',').length > 3) return ',';
+  return null;
+}
+
+/** Shared by paste-import and file-import: headerCells is a flat array of
+ * column headers; dataRows is an array of row arrays (cells may be strings,
+ * numbers, or Date objects when they come from a parsed spreadsheet). */
+function buildAuditRecords(headerCells, dataRows){
+  const header = headerCells.map(normKey);
+  const idxId = header.findIndex(h => h === 'ID');
+  const idxTs = header.findIndex(h => h.includes('INICIO'));
+  let idxAuditor = header.findIndex(h => h.includes('SUA') && h.includes('MATRICULA'));
+  if (idxAuditor === -1) idxAuditor = header.findIndex(h => h === 'MATRICULA');
+  const idxAuditado = header.findIndex(h => h.includes('CONDUTOR'));
+  const idxOficina = header.findIndex(h => h === 'OFICINA');
+  const idxUte = header.findIndex(h => h === 'UTE');
+  const idxLinhas = header.map((h,i) => h.startsWith('LINHA') ? i : -1).filter(i => i>=0);
+
+  if (idxTs === -1 || idxAuditor === -1){
+    return { ok:false, error:'Cabeçalho não reconhecido. Confirme que as colunas "Hora de início" e "SUA MATRÍCULA" estão presentes.' };
+  }
+
+  const records = [];
+  let skipped = 0;
+  for (const cells of dataRows){
+    if (!cells || cells.every(c => c === '' || c === null || c === undefined)) continue;
+    const rawTs = cells[idxTs];
+    const ts = rawTs instanceof Date ? rawTs : parseFlexibleDate(rawTs);
+    const auditorMatricula = normMatricula(cells[idxAuditor]);
+    if (!ts || isNaN(ts.getTime()) || !auditorMatricula){ skipped++; continue; }
+    let linha = null;
+    for (const li of idxLinhas){ if (cells[li] !== undefined && cells[li] !== null && String(cells[li]).trim()){ linha = String(cells[li]).trim(); break; } }
+    const idRaw = idxId >= 0 ? String(cells[idxId] ?? '').trim() : '';
+    const id = idRaw || ('imp_' + ts.toISOString() + '_' + auditorMatricula + '_' + (idxAuditado>=0 ? normMatricula(cells[idxAuditado]) : ''));
+    records.push({
+      id,
+      ts: ts.toISOString(),
+      auditorMatricula,
+      auditadoMatricula: idxAuditado >= 0 ? (normMatricula(cells[idxAuditado]) || null) : null,
+      oficina: idxOficina >= 0 ? String(cells[idxOficina] ?? '').trim() : null,
+      ute: idxUte >= 0 ? String(cells[idxUte] ?? '').trim() : null,
+      linha,
+    });
+  }
+  return { ok:true, records, imported: records.length, skipped };
+}
+
+function parseImportAudits(text){
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length < 2) return { ok:false, error:'Cole ao menos uma linha de cabeçalho e uma linha de dados.' };
+  const delim = detectDelimiter(lines[0]);
+  if (!delim) return { ok:false, error:'Não foi possível identificar as colunas. Copie os dados diretamente do Excel/Forms (com cabeçalho) e cole aqui.' };
+  const rows = lines.map(l => l.split(delim));
+  return buildAuditRecords(rows[0], rows.slice(1));
+}
+
+/** Scans every sheet of a parsed workbook for one whose header row looks like
+ * the Forms export (has a "...INICIO" column and a matrícula-do-auditor
+ * column). Returns {sheetName, header, dataRows} or null. */
+function findAuditSheet(workbook){
+  for (const name of workbook.SheetNames){
+    const ws = workbook.Sheets[name];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:'' });
+    if (!rows.length) continue;
+    const headerNorm = rows[0].map(normKey);
+    const hasTs = headerNorm.some(h => h.includes('INICIO'));
+    const hasAuditor = headerNorm.some(h => h.includes('SUA') && h.includes('MATRICULA')) || headerNorm.includes('MATRICULA');
+    if (hasTs && hasAuditor){
+      return { sheetName: name, header: rows[0], dataRows: rows.slice(1) };
+    }
+  }
+  return null;
+}
+
+/** Compares parsed audit records against what's already loaded, keyed by
+ * Id — the same key mergeAndSaveAudits uses. Anything with a repeated Id
+ * (e.g. two exports whose date ranges overlap) counts as an update, not a
+ * duplicate: it will replace the existing row, never add a second one. */
+function diffAuditsImport(records){
+  const existing = new Set(state.records.map(r => String(r.id)));
+  let added = 0, updated = 0;
+  for (const r of records){
+    if (existing.has(String(r.id))) updated++; else added++;
+  }
+  return { added, updated };
+}
+
+/** Shows a preview box (novos / já existentes / ignorados) and holds the
+ * parsed result in state.pendingAuditsImport until the user confirms —
+ * nothing is written to storage until confirmAuditsImport() runs. */
+function renderAuditsPreview(res, suffix, clearEl){
+  const diff = diffAuditsImport(res.records);
+  state.pendingAuditsImport = { res, suffix, clearEl };
+  const box = document.getElementById('importAuditsPreview');
+  box.hidden = false;
+  box.innerHTML = `
+    <div class="preview-counts">
+      <span class="stat new"><b>${diff.added}</b> novo(s)</span>
+      <span class="stat upd"><b>${diff.updated}</b> já existente(s) — atualiza${diff.updated===1?'':'m'}, não duplica${diff.updated===1?'':'m'}</span>
+      ${res.skipped ? `<span class="stat skip"><b>${res.skipped}</b> linha(s) ignorada(s)</span>` : ''}
+    </div>
+    <div class="preview-actions">
+      <button class="btn btn-solid" id="confirmAuditsImportBtn" type="button">Confirmar importação</button>
+      <button class="btn btn-outline" id="cancelAuditsImportBtn" type="button">Cancelar</button>
+    </div>`;
+  document.getElementById('confirmAuditsImportBtn').addEventListener('click', confirmAuditsImport);
+  document.getElementById('cancelAuditsImportBtn').addEventListener('click', cancelAuditsImport);
+}
+
+async function confirmAuditsImport(){
+  const pending = state.pendingAuditsImport;
+  if (!pending) return;
+  const statusEl = document.getElementById('importAuditsStatus');
+  const box = document.getElementById('importAuditsPreview');
+  box.hidden = true; box.innerHTML = '';
+  state.pendingAuditsImport = null;
+  await mergeAndSaveAudits(pending.res, statusEl, pending.suffix);
+  if (pending.clearEl) pending.clearEl.value = '';
+}
+
+function cancelAuditsImport(){
+  state.pendingAuditsImport = null;
+  const box = document.getElementById('importAuditsPreview');
+  box.hidden = true; box.innerHTML = '';
+  const statusEl = document.getElementById('importAuditsStatus');
+  statusEl.textContent = 'Importação cancelada — nada foi salvo.';
+  statusEl.className = 'import-status';
+}
+
+function parseImportEmployees(text){
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (!lines.length) return { ok:false, error:'Cole ao menos uma linha de dados.' };
+  let delim = detectDelimiter(lines[0]);
+  if (!delim && lines[0].includes('|')) delim = '|';
+  if (!delim) return { ok:false, error:'Não foi possível identificar as colunas (use Tab, "|" ou ";").' };
+  let start = 0;
+  if (normKey(lines[0].split(delim)[0]) === 'MATRICULA') start = 1;
+  const employees = [];
+  let skipped = 0;
+  for (let i=start; i<lines.length; i++){
+    const cells = lines[i].split(delim).map(c => c.trim());
+    const matricula = normMatricula(cells[0]);
+    if (!/^\d+$/.test(matricula)){ skipped++; continue; }
+    employees.push({ matricula, nome: cells[1]||'', turno: cells[2]||null });
+  }
+  if (!employees.length) return { ok:false, error:'Nenhuma linha reconhecida como Matrícula/Nome.' };
+  return { ok:true, employees, imported: employees.length, skipped };
+}
+
+/* ---------- Local persistence (browser localStorage) ----------
+ * This build has no shared backend: everything imported is saved only in
+ * the visiting browser's localStorage, under these two keys. Each visitor
+ * (or each new browser/device) starts from the seed data baked in above. */
+const LS_AUDITS_KEY = 'gembaAM.audits.v1';
+const LS_EMPLOYEES_KEY = 'gembaAM.employees.v1';
+
+function lsRead(key){
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.rows)) return null;
+    return parsed;
+  } catch(e){ return null; }
+}
+function lsWrite(key, rows, updatedAt){
+  try { window.localStorage.setItem(key, JSON.stringify({ rows, updatedAt })); return true; }
+  catch(e){ return false; }
+}
+
+function initDb(){
+  let storageOk = true;
+  try { window.localStorage.setItem('__gembaAM_probe__','1'); window.localStorage.removeItem('__gembaAM_probe__'); }
+  catch(e){ storageOk = false; }
+  state.dbAvailable = storageOk;
+
+  const savedAudits = storageOk ? lsRead(LS_AUDITS_KEY) : null;
+  const savedEmployees = storageOk ? lsRead(LS_EMPLOYEES_KEY) : null;
+
+  state.records = savedAudits ? savedAudits.rows : RECORDS_SEED.slice();
+  state.recordsUpdatedAt = savedAudits ? savedAudits.updatedAt : null;
+  state.employees = savedEmployees ? savedEmployees.rows : EMPLOYEES_SEED.slice();
+  state.employeesUpdatedAt = savedEmployees ? savedEmployees.updatedAt : null;
+
+  // Keep other tabs of the SAME browser in sync (the 'storage' event fires
+  // only in tabs other than the one that wrote it).
+  if (storageOk){
+    window.addEventListener('storage', (e) => {
+      if (e.key === LS_AUDITS_KEY){
+        const d = lsRead(LS_AUDITS_KEY);
+        if (d){ state.records = d.rows; state.recordsUpdatedAt = d.updatedAt; rebuildDerivedAndRender(); }
+      } else if (e.key === LS_EMPLOYEES_KEY){
+        const d = lsRead(LS_EMPLOYEES_KEY);
+        if (d){ state.employees = d.rows; state.employeesUpdatedAt = d.updatedAt; rebuildDerivedAndRender(); }
+      }
+    });
+  }
+
+  rebuildDerivedAndRender();
+}
+
+/** Merges a parseImportAudits/buildAuditRecords result into state, saves to
+ * db when available, and reports the outcome in statusEl. suffix is an
+ * optional string appended to the success message (e.g. the file name). */
+async function mergeAndSaveAudits(res, statusEl, suffix){
+  if (!res.ok){ statusEl.textContent = res.error; statusEl.className = 'import-status err'; return; }
+  const map = new Map(state.records.map(r => [String(r.id), r]));
+  res.records.forEach(r => map.set(String(r.id), r));
+  const merged = Array.from(map.values()).sort((a,b) => new Date(a.ts) - new Date(b.ts));
+  const updatedAt = new Date().toISOString();
+  state.records = merged;
+  state.recordsUpdatedAt = updatedAt;
+  if (state.dbAvailable){
+    if (!lsWrite(LS_AUDITS_KEY, merged, updatedAt)){
+      statusEl.textContent = 'Importado nesta visita, mas não foi possível salvar no navegador.'; statusEl.className = 'import-status err'; return;
+    }
+  }
+  statusEl.textContent = `${res.imported} registro(s) importado(s)` + (res.skipped ? `, ${res.skipped} ignorado(s)` : '') + (suffix || '') + (state.dbAvailable ? '' : ' (não salvo — apenas nesta visita)') + '.';
+  statusEl.className = 'import-status ok';
+  rebuildDerivedAndRender();
+}
+
+async function handleImportAudits(){
+  const ta = document.getElementById('importAuditsText');
+  const statusEl = document.getElementById('importAuditsStatus');
+  document.getElementById('importAuditsPreview').hidden = true;
+  const res = parseImportAudits(ta.value);
+  if (!res.ok){ statusEl.textContent = res.error; statusEl.className = 'import-status err'; return; }
+  statusEl.textContent = ''; statusEl.className = 'import-status';
+  renderAuditsPreview(res, null, ta);
+}
+
+async function handleAuditsFileSelect(ev){
+  const file = ev.target.files[0];
+  const nameEl = document.getElementById('importAuditsFileName');
+  const statusEl = document.getElementById('importAuditsStatus');
+  document.getElementById('importAuditsPreview').hidden = true;
+  if (!file) return;
+  nameEl.textContent = file.name;
+  nameEl.classList.add('picked');
+  statusEl.textContent = 'Lendo planilha…';
+  statusEl.className = 'import-status';
+  try {
+    if (typeof XLSX === 'undefined'){
+      statusEl.textContent = 'Não foi possível carregar o leitor de planilhas agora. Tente novamente ou cole os dados manualmente.';
+      statusEl.className = 'import-status err';
+      return;
+    }
+    const buf = await file.arrayBuffer();
+    const workbook = XLSX.read(buf, { type:'array', cellDates:true });
+    const found = findAuditSheet(workbook);
+    if (!found){
+      statusEl.textContent = `Não encontrei, em "${file.name}", uma aba com as colunas esperadas (Hora de início, SUA MATRÍCULA...). Confirme se é a planilha de respostas correta.`;
+      statusEl.className = 'import-status err';
+      return;
+    }
+    const res = buildAuditRecords(found.header, found.dataRows);
+    if (!res.ok){ statusEl.textContent = res.error; statusEl.className = 'import-status err'; return; }
+    statusEl.textContent = ''; statusEl.className = 'import-status';
+    renderAuditsPreview(res, ` — aba "${found.sheetName}" de ${file.name}`, null);
+  } catch (err){
+    console.error('import xlsx', err);
+    statusEl.textContent = 'Erro ao ler o arquivo. Confirme que é uma planilha .xlsx/.xls/.csv válida.';
+    statusEl.className = 'import-status err';
+  } finally {
+    ev.target.value = '';
+  }
+}
+
+async function handleImportEmployees(){
+  const ta = document.getElementById('importEmpText');
+  const statusEl = document.getElementById('importEmpStatus');
+  const res = parseImportEmployees(ta.value);
+  if (!res.ok){ statusEl.textContent = res.error; statusEl.className = 'import-status err'; return; }
+  const existing = new Set(state.employees.map(e => normMatricula(e.matricula)));
+  let added = 0, updated = 0;
+  res.employees.forEach(e => { if (existing.has(e.matricula)) updated++; else added++; });
+  const map = new Map(state.employees.map(e => [normMatricula(e.matricula), e]));
+  res.employees.forEach(e => map.set(e.matricula, e));
+  const merged = Array.from(map.values());
+  const updatedAt = new Date().toISOString();
+  state.employees = merged;
+  state.employeesUpdatedAt = updatedAt;
+  if (state.dbAvailable){
+    if (!lsWrite(LS_EMPLOYEES_KEY, merged, updatedAt)){
+      statusEl.textContent = 'Importado nesta visita, mas não foi possível salvar no navegador.'; statusEl.className = 'import-status err'; return;
+    }
+  }
+  statusEl.textContent = `${added} novo(s), ${updated} atualizado(s)` + (res.skipped ? `, ${res.skipped} ignorado(s)` : '') + (state.dbAvailable ? '' : ' (não salvo — apenas nesta visita)') + '.';
+  statusEl.className = 'import-status ok';
+  ta.value = '';
+  rebuildDerivedAndRender();
+}
+
+document.getElementById('toggleImport').addEventListener('click', () => {
+  const panel = document.getElementById('importPanel');
+  panel.hidden = !panel.hidden;
+  if (!panel.hidden) panel.scrollIntoView({behavior:'smooth', block:'start'});
+});
+document.getElementById('importAuditsBtn').addEventListener('click', handleImportAudits);
+document.getElementById('importEmpBtn').addEventListener('click', handleImportEmployees);
+document.getElementById('importAuditsFileBtn').addEventListener('click', () => document.getElementById('importAuditsFile').click());
+document.getElementById('importAuditsFile').addEventListener('change', handleAuditsFileSelect);
+document.getElementById('mobileSortSelect').addEventListener('change', (e) => {
+  const [key, dir] = e.target.value.split(':');
+  state.sort.key = key; state.sort.dir = dir;
+  renderTable(computeFacets());
+});
+
+initDb();
+</script>
+</body>
+</html>
