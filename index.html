@@ -431,6 +431,7 @@ table.log tbody tr:hover { background: var(--surface-2); }
 /* Import panel */
 .import-panel { margin-top: 20px; }
 .import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.import-grid > .import-box:last-child { grid-column: 1 / -1; }
 @media (max-width: 860px) { .import-grid { grid-template-columns: 1fr; } }
 .import-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
 .import-box h3 { margin: 0 0 4px; font-size: 13.5px; }
@@ -615,11 +616,11 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
   <section class="board">
     <aside class="filters" id="filters"></aside>
     <div class="content">
-      <div class="view-tabs" role="tablist">
-        <button class="view-tab active" id="tabFreq" type="button" role="tab">Frequência</button>
-        <button class="view-tab" id="tabQual" type="button" role="tab">Qualidade</button>
+      <div class="view-tabs" role="tablist" aria-label="Visões do painel">
+        <button class="view-tab active" id="tabFreq" type="button" role="tab" aria-selected="true" aria-controls="viewFreq">Frequência</button>
+        <button class="view-tab" id="tabQual" type="button" role="tab" aria-selected="false" aria-controls="viewQual">Qualidade</button>
       </div>
-      <div id="viewFreq">
+      <div id="viewFreq" role="tabpanel" aria-labelledby="tabFreq">
       <div class="panel">
         <div class="panel-head">
           <div>
@@ -756,6 +757,16 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
           <span class="import-status" id="importEmpStatus"></span>
         </div>
       </div>
+      <div class="import-box">
+        <h3>Backup dos dados</h3>
+        <div class="hint">Os dados ficam salvos no navegador. Limpar o histórico do navegador apaga tudo — gere um backup de vez em quando e guarde o texto num arquivo.</div>
+        <div class="actions">
+          <button class="btn btn-outline" type="button" id="backupBtn">Gerar backup</button>
+          <button class="btn btn-outline" type="button" id="restoreBtn">Restaurar backup</button>
+          <span class="import-status" id="backupStatus"></span>
+        </div>
+        <textarea id="backupText" placeholder="Clique em “Gerar backup” para o conteúdo aparecer aqui — copie e guarde. Para restaurar, cole o backup e clique em “Restaurar backup”."></textarea>
+      </div>
     </div>
   </section>
 
@@ -787,14 +798,19 @@ function normKey(s){ return stripAccents(String(s||'')).toUpperCase().replace(/[
 function parseFlexibleDate(raw){
   if (!raw) return null;
   raw = String(raw).trim();
-  let d = new Date(raw);
-  if (!isNaN(d.getTime()) && /\d{4}/.test(raw)) return d;
-  let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T]?(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?/);
+  if (!raw) return null;
+  // dd/mm/aaaa é tentado ANTES do Date() nativo: o Forms/Excel em pt-BR exporta
+  // nesse formato e o Date() leria "01/09/2026" como 9 de janeiro (padrão
+  // americano). Toda auditoria de dia <= 12 caía no mês errado, sem aviso.
+  let m = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
   if (m){
     const [_, dd, mm, yyyy, hh='0', mi='0', ss='0'] = m;
-    d = new Date(+yyyy, +mm-1, +dd, +hh, +mi, +ss);
-    if (!isNaN(d.getTime())) return d;
+    const d = new Date(+yyyy, +mm-1, +dd, +hh, +mi, +ss);
+    // confere que a data existe de fato (rejeita 31/02, por exemplo)
+    if (!isNaN(d.getTime()) && d.getDate() === +dd && d.getMonth() === +mm-1) return d;
   }
+  let d = new Date(raw);   // ISO e outros formatos sem ambiguidade
+  if (!isNaN(d.getTime()) && /\d{4}/.test(raw)) return d;
   return null;
 }
 function fmtDate(d){
@@ -1324,6 +1340,57 @@ function rebuildDerivedAndRender(){
   renderAll();
 }
 
+
+/** Grava o estado inteiro (usado pela restauração de backup). */
+async function persistAll(){
+  if (!state.dbAvailable) return false;
+  const updatedAt = new Date().toISOString();
+  const ok = lsWrite(LS_AUDITS_KEY, state.records, updatedAt, state.ratingMeta)
+          && lsWrite(LS_EMPLOYEES_KEY, state.employees, updatedAt);
+  if (ok){ state.recordsUpdatedAt = updatedAt; state.employeesUpdatedAt = updatedAt; }
+  return ok;
+}
+
+/* ---------- Backup e restauração ---------- */
+function handleBackup(){
+  const ta = document.getElementById('backupText');
+  const st = document.getElementById('backupStatus');
+  const payload = {
+    v: 1,
+    geradoEm: new Date().toISOString(),
+    audits: state.records,
+    meta: state.ratingMeta,
+    employees: state.employees,
+  };
+  ta.value = JSON.stringify(payload);
+  ta.focus(); ta.select(); ta.scrollTop = 0;
+  let copiado = false;
+  try { copiado = document.execCommand('copy'); } catch(e){ copiado = false; }
+  st.textContent = `${state.records.length} auditorias e ${state.employees.length} colaboradores`
+    + (copiado ? ' — copiado para a área de transferência. Cole num arquivo e guarde.'
+               : ' — selecione o texto abaixo (Ctrl+C) e guarde num arquivo.');
+  st.className = 'import-status ok';
+}
+
+async function handleRestore(){
+  const ta = document.getElementById('backupText');
+  const st = document.getElementById('backupStatus');
+  let dados;
+  try { dados = JSON.parse(ta.value); }
+  catch(e){ st.textContent = 'Não consegui ler esse backup — cole o texto completo, do "{" ao "}".'; st.className = 'import-status err'; return; }
+  if (!dados || !Array.isArray(dados.audits)){
+    st.textContent = 'Esse texto não parece um backup do painel.'; st.className = 'import-status err'; return;
+  }
+  state.records = dados.audits;
+  if (Array.isArray(dados.meta) && dados.meta.length) state.ratingMeta = dados.meta;
+  if (Array.isArray(dados.employees) && dados.employees.length) state.employees = dados.employees;
+  const salvou = await persistAll();
+  st.textContent = `${state.records.length} auditorias restauradas`
+    + (salvou ? '.' : ' (não foi possível salvar — vale apenas nesta visita).');
+  st.className = salvou ? 'import-status ok' : 'import-status err';
+  rebuildDerivedAndRender();
+}
+
 /* ---------- Qualidade: escala, nota e recortes ---------- */
 /* A escala tem 4 níveis ordenados. A cor NUNCA aparece sozinha: emoji e
  * palavra acompanham todo uso, que é o que torna a escala legível também
@@ -1563,7 +1630,7 @@ function renderQualItems(recs){
     return `
       <div class="item-row${sistemico ? ' is-systemic' : ''}">
         <div class="item-score" style="color:${ratingColor(faixa)}">${score.toFixed(0)}</div>
-        <div class="item-name">${escapeHtml(m.label)}<span class="item-block">${escapeHtml(m.bloco)}${sistemico ? ' · sistêmico' : ''}</span></div>
+        <div class="item-name">${escapeHtml(m.label)}<span class="item-block">nº ${m.n} · ${escapeHtml(m.bloco)}${sistemico ? ' · sistêmico' : ''}</span></div>
         <div class="item-mini">${mini}</div>
         <div class="item-repeat"><b>${ruins}/${vals.length}</b>ruim ou pior</div>
       </div>`;
@@ -1606,12 +1673,41 @@ function setView(view){
   state.view = view;
   document.getElementById('viewFreq').hidden = view !== 'freq';
   document.getElementById('viewQual').hidden = view !== 'qual';
-  document.getElementById('tabFreq').classList.toggle('active', view === 'freq');
-  document.getElementById('tabQual').classList.toggle('active', view === 'qual');
+  const tf = document.getElementById('tabFreq'), tq = document.getElementById('tabQual');
+  tf.classList.toggle('active', view === 'freq');
+  tq.classList.toggle('active', view === 'qual');
+  tf.setAttribute('aria-selected', String(view === 'freq'));
+  tq.setAttribute('aria-selected', String(view === 'qual'));
   renderAll();
 }
 
 /* ---------- Import parsing ---------- */
+/** Lê texto delimitado respeitando aspas — inclusive quebras de linha DENTRO
+ * de uma célula. O cabeçalho do Forms tem "\n" no meio das perguntas, e um
+ * split por linha despedaçava o cabeçalho: a importação perdia colunas de
+ * nota e ainda assim dizia que tinha dado certo. */
+function parseDelimited(text, delim){
+  const s = String(text).replace(/\r\n?/g, '\n');
+  const rows = [];
+  let row = [], field = '', inQuotes = false, i = 0;
+  while (i < s.length){
+    const c = s[i];
+    if (inQuotes){
+      if (c === '"'){
+        if (s[i+1] === '"'){ field += '"'; i += 2; continue; }   // aspas escapadas
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"'){ inQuotes = true; i++; continue; }
+    if (c === delim){ row.push(field); field = ''; i++; continue; }
+    if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+    field += c; i++;
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim() !== ''));
+}
+
 const RATING_WORDS = ['Bom', 'Regular', 'Ruim', 'Péssimo'];
 
 /** '😕 Ruim' -> 'Ruim'. Descarta emoji e sobras, guarda só a palavra. */
@@ -1707,12 +1803,18 @@ function buildAuditRecords(headerCells, dataRows){
 }
 
 function parseImportAudits(text){
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-  if (lines.length < 2) return { ok:false, error:'Cole ao menos uma linha de cabeçalho e uma linha de dados.' };
-  const delim = detectDelimiter(lines[0]);
-  if (!delim) return { ok:false, error:'Não foi possível identificar as colunas. Copie os dados diretamente do Excel/Forms (com cabeçalho) e cole aqui.' };
-  const rows = lines.map(l => l.split(delim));
-  return buildAuditRecords(rows[0], rows.slice(1));
+  const s = String(text || '');
+  if (!s.trim()) return { ok:false, error:'Cole os dados exportados do Forms/Excel.' };
+  // testa cada delimitador com o parser que respeita aspas e fica com o que
+  // produzir o cabeçalho mais completo
+  let melhor = null;
+  for (const d of ['\t', ';', ',']){
+    const rows = parseDelimited(s, d);
+    if (rows.length < 2) continue;
+    if (rows[0].length > 1 && (!melhor || rows[0].length > melhor[0].length)) melhor = rows;
+  }
+  if (!melhor) return { ok:false, error:'Não foi possível identificar as colunas. Copie os dados diretamente do Excel/Forms (com cabeçalho) e cole aqui.' };
+  return buildAuditRecords(melhor[0], melhor.slice(1));
 }
 
 /** Scans every sheet of a parsed workbook for one whose header row looks like
@@ -1877,7 +1979,16 @@ function initDb(){
 async function mergeAndSaveAudits(res, statusEl, suffix){
   if (!res.ok){ statusEl.textContent = res.error; statusEl.className = 'import-status err'; return; }
   const map = new Map(state.records.map(r => [String(r.id), r]));
-  res.records.forEach(r => map.set(String(r.id), r));
+  const CONTEXTO = ['oficina','ute','linha','operacao','maquina','ciclo','auditadoMatricula'];
+  res.records.forEach(r => {
+    const antigo = map.get(String(r.id));
+    if (!antigo){ map.set(String(r.id), r); return; }
+    // Um export enxuto (sem as colunas de avaliação) não pode apagar as notas
+    // já registradas daquele Gemba — ele completa, nunca zera.
+    const merged = { ...antigo, ...r, ratings: { ...(antigo.ratings || {}), ...(r.ratings || {}) } };
+    CONTEXTO.forEach(k => { if (!merged[k] && antigo[k]) merged[k] = antigo[k]; });
+    map.set(String(r.id), merged);
+  });
   const merged = Array.from(map.values()).sort((a,b) => new Date(a.ts) - new Date(b.ts));
   const metaMap = new Map((state.ratingMeta || []).map(m => [m.n, m]));
   (res.ratingMeta || []).forEach(m => metaMap.set(m.n, m));
@@ -1979,6 +2090,16 @@ document.getElementById('importAuditsFileBtn').addEventListener('click', () => d
 document.getElementById('importAuditsFile').addEventListener('change', handleAuditsFileSelect);
 document.getElementById('tabFreq').addEventListener('click', () => setView('freq'));
 document.getElementById('tabQual').addEventListener('click', () => setView('qual'));
+// setas navegam entre as abas, como se espera de um tablist
+document.querySelector('.view-tabs').addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  e.preventDefault();
+  const proxima = state.view === 'freq' ? 'qual' : 'freq';
+  setView(proxima);
+  document.getElementById(proxima === 'freq' ? 'tabFreq' : 'tabQual').focus();
+});
+document.getElementById('backupBtn').addEventListener('click', handleBackup);
+document.getElementById('restoreBtn').addEventListener('click', handleRestore);
 document.getElementById('qualDimSelect').addEventListener('change', () => renderQualByDim(recsWithRatings(computeFacets().final)));
 document.getElementById('mobileSortSelect').addEventListener('change', (e) => {
   const [key, dir] = e.target.value.split(':');
