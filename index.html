@@ -451,6 +451,8 @@ table.log tbody tr:hover { background: var(--surface-2); }
 .import-status.err { color: var(--critical); }
 
 .import-preview { margin-top: 10px; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: 10px 12px; }
+.import-preview .preview-periodo { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 7px; }
+.import-preview .preview-periodo b { color: var(--text-primary); }
 .import-preview .preview-counts { display: flex; flex-wrap: wrap; gap: 5px 16px; margin-bottom: 9px; font-size: 11.5px; color: var(--text-muted); }
 .import-preview .preview-counts .stat b { font-size: 13px; color: var(--text-primary); }
 .import-preview .preview-counts .stat.new b { color: var(--good); }
@@ -1779,6 +1781,10 @@ function buildAuditRecords(headerCells, dataRows){
   const idxOficina = header.findIndex(h => h === 'OFICINA');
   const idxUte = header.findIndex(h => h === 'UTE');
   const idxLinhas = header.map((h,i) => h.startsWith('LINHA') ? i : -1).filter(i => i>=0);
+  // "DATA" é o dia que o auditor declara ter feito o Gemba. "Hora de início" é
+  // quando o formulário foi preenchido — que pode ser de madrugada ou no dia
+  // seguinte. Existindo as duas, o dia da auditoria é o que vale.
+  const idxData = header.findIndex(h => h === 'DATA');
   const idxOperacao = header.findIndex(h => h.includes('OPERACAO'));
   const idxMaquina = header.findIndex(h => h.includes('MAQUINA'));
   const idxCiclo = header.findIndex(h => h.includes('QUALCICLO'));
@@ -1796,13 +1802,26 @@ function buildAuditRecords(headerCells, dataRows){
   }
 
   const records = [];
-  let skipped = 0;
+  let skipped = 0, nComData = 0;
   for (const cells of dataRows){
     if (!cells || cells.every(c => c === '' || c === null || c === undefined)) continue;
     const rawTs = cells[idxTs];
-    const ts = rawTs instanceof Date ? rawTs : parseFlexibleDate(rawTs);
+    const tsPreenchimento = rawTs instanceof Date ? rawTs : parseFlexibleDate(rawTs);
     const auditorMatricula = normMatricula(cells[idxAuditor]);
-    if (!ts || isNaN(ts.getTime()) || !auditorMatricula){ skipped++; continue; }
+    if (!tsPreenchimento || isNaN(tsPreenchimento.getTime()) || !auditorMatricula){ skipped++; continue; }
+
+    let ts = tsPreenchimento, usouData = false;
+    if (idxData >= 0){
+      const rawData = cells[idxData];
+      const dData = rawData instanceof Date ? rawData : parseFlexibleDate(rawData);
+      if (dData && !isNaN(dData.getTime())){
+        // dia vem do DATA, hora continua sendo a do preenchimento
+        ts = new Date(dData.getFullYear(), dData.getMonth(), dData.getDate(),
+                      tsPreenchimento.getHours(), tsPreenchimento.getMinutes(), tsPreenchimento.getSeconds());
+        usouData = true;
+        nComData++;
+      }
+    }
     let linha = null;
     for (const li of idxLinhas){ if (cells[li] !== undefined && cells[li] !== null && String(cells[li]).trim()){ linha = String(cells[li]).trim(); break; } }
     const idRaw = idxId >= 0 ? String(cells[idxId] ?? '').trim() : '';
@@ -1815,6 +1834,8 @@ function buildAuditRecords(headerCells, dataRows){
     records.push({
       id,
       ts: ts.toISOString(),
+      tsPreenchimento: tsPreenchimento.toISOString(),
+      dataDeclarada: usouData,
       auditorMatricula,
       auditadoMatricula: idxAuditado >= 0 ? (normMatricula(cells[idxAuditado]) || null) : null,
       oficina: idxOficina >= 0 ? String(cells[idxOficina] ?? '').trim() : null,
@@ -1826,7 +1847,7 @@ function buildAuditRecords(headerCells, dataRows){
       ratings,
     });
   }
-  return { ok:true, records, imported: records.length, skipped, ratingMeta: ratingCols.map(rc => rc.meta) };
+  return { ok:true, records, imported: records.length, skipped, nComData, temColunaData: idxData >= 0, ratingMeta: ratingCols.map(rc => rc.meta) };
 }
 
 function parseImportAudits(text){
@@ -1883,7 +1904,25 @@ function renderAuditsPreview(res, suffix, clearEl){
   state.pendingAuditsImport = { res, suffix, clearEl };
   const box = document.getElementById('importAuditsPreview');
   box.hidden = false;
-  box.innerHTML = `
+
+  // Mostra o período lido do arquivo ANTES de confirmar. Sem isso, quem edita
+  // datas na planilha e reimporta não tem como saber se a alteração foi
+  // captada — só descobre depois, olhando o gráfico e desconfiando.
+  const datas = res.records.map(r => new Date(r.ts)).filter(d => !isNaN(d)).sort((a, b) => a - b);
+  const nData = res.nComData || 0;
+  const fonteTxt = nData === 0
+    ? 'coluna <b>Hora de início</b>'
+    : (nData === res.records.length
+        ? 'coluna <b>DATA</b>'
+        : `<b>DATA</b> em ${nData} registro(s) e <b>Hora de início</b> nos demais`);
+  const periodo = datas.length
+    ? `<div class="preview-periodo">Período lido de ${fonteTxt}: <b>${fmtDate(datas[0])}</b>`
+      + (datas.length > 1 && fmtDate(datas[0]) !== fmtDate(datas[datas.length-1])
+          ? ` a <b>${fmtDate(datas[datas.length-1])}</b>` : '')
+      + `</div>`
+    : '';
+
+  box.innerHTML = periodo + `
     <div class="preview-counts">
       <span class="stat new"><b>${diff.added}</b> novo(s)</span>
       <span class="stat upd"><b>${diff.updated}</b> já existente(s) — atualiza${diff.updated===1?'':'m'}, não duplica${diff.updated===1?'':'m'}</span>
