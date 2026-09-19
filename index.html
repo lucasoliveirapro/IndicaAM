@@ -5,595 +5,852 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel Gemba AM</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
 * { box-sizing: border-box; }
 
+/* ==========================================================================
+   TOKENS — shadcn/ui, tema "neutral"
+   Os valores vêm do registry do shadcn (publicados em oklch) convertidos
+   para hex: celular antigo no chão de fábrica pode não entender oklch().
+   Os apelidos no fim de cada bloco existem porque o JS lê alguns nomes
+   direto (--series-*, --rate-*, --text-muted) — não renomear.
+   ========================================================================== */
 :root {
-  --bg: #eef0f4;
-  --surface: #ffffff;
-  --surface-2: #e4e8ee;
-  --border: #d7dce4;
-  --text-primary: #161c26;
-  --text-secondary: #545d6b;
-  --text-muted: #838c9b;
-  --brand: #1f4e79;
-  --brand-soft: #e7eef5;
-  --header-1: #123650;
-  --header-2: #1f4e79;
-  --highlight: #b85c00;
-  --highlight-soft: #fbe8d2;
-  --good: #0ca30c;
-  --warning: #b5790a;
-  --critical: #d03b3b;
-  --rate-bom: #0a7332;
-  --rate-regular: #e8b027;
-  --rate-ruim: #d64828;
-  --rate-pessimo: #7a1f4f;
-  --chart-grid: #e1e0d9;
-  --chart-axis: #c3c2b7;
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --series-3: #1baf7a;
-  --series-4: #c98500;
-  --series-5: #e87ba4;
-  --series-6: #008300;
-  --series-7: #4a3aa7;
-  --series-8: #e34948;
-  --series-other: #9aa2b1;
-  --shadow: rgba(22,28,38,0.10);
+  --background: #FFFFFF;
+  --foreground: #0A0A0A;
+  --card: #FFFFFF;
+  --card-foreground: #0A0A0A;
+  --popover: #FFFFFF;
+  --primary: #171717;
+  --primary-foreground: #FAFAFA;
+  --primary-hover: #262626;
+  --secondary: #F5F5F5;
+  --secondary-foreground: #171717;
+  --muted: #F5F5F5;
+  --muted-foreground: #6D6D6D;
+  --accent: #F5F5F5;
+  --accent-foreground: #171717;
+  --destructive: #E7000B;
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #A1A1A1;
+  --ring-shadow: rgba(161,161,161,.45);
+  --page: #F5F5F5;
+  --row-hover: #FAFAFA;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  --shadow-xs: 0 1px 2px 0 rgba(10,10,10,.05);
+  --shadow-sm: 0 1px 3px 0 rgba(10,10,10,.09), 0 1px 2px -1px rgba(10,10,10,.09);
+
+  /* ---- movimento: tokens do transitions.dev -------------------------- */
+  --t-micro: 80ms;
+  --t-quick: 150ms;
+  --t-fast: 250ms;
+  --t-medium: 350ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  /* ---- status ------------------------------------------------------- */
+  --good: #0A7332;
+  --warning: #8A6508;
+  --critical: #C0391B;
+
+  /* ---- escala Bom/Regular/Ruim/Péssimo -------------------------------
+     -fg é a versão para TEXTO: o âmbar cheio tem 1.97:1 no branco,
+     não serve como cor de letra. O preenchimento continua vivo. */
+  --rate-bom: #0A7332;        --rate-bom-fg: #0A7332;      --rate-bom-on: #FFFFFF;
+  --rate-regular: #E8B027;    --rate-regular-fg: #8A6508;  --rate-regular-on: #0A0A0A;
+  --rate-ruim: #D64828;       --rate-ruim-fg: #C0391B;     --rate-ruim-on: #0A0A0A;
+  --rate-pessimo: #7A1F4F;    --rate-pessimo-fg: #7A1F4F;  --rate-pessimo-on: #FFFFFF;
+  /* -on = cor da LETRA em cima do preenchimento: branco sobre âmbar dá 1.97:1 */
+  --on-good: #FFFFFF; --on-warning: #FFFFFF; --on-destructive: #FFFFFF; --on-bronze: #FFFFFF;
+
+  /* ---- séries (validadas: banda de luminosidade, piso de croma,
+     separação para daltonismo e contraste no fundo) ------------------- */
+  --series-1: #2A78D6;  --series-2: #EB6834;  --series-3: #1BAF7A;
+  --series-4: #C98500;  --series-5: #E87BA4;  --series-6: #008300;
+  --series-7: #4A3AA7;  --series-8: #E34948;  --series-other: #A1A1A1;
+
+  --chart-grid: #E5E5E5;
+  --chart-axis: #D4D4D4;
+
+  /* ---- apelidos dos nomes antigos (o JS e o HTML usam) --------------- */
+  --bg: var(--page);
+  --surface: var(--card);
+  --surface-2: var(--muted);
+  --surface-3: var(--card);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: var(--muted-foreground);
+  --brand: var(--primary);
+  --brand-soft: var(--secondary);
+  --highlight: #8A6508;
+  --highlight-soft: #FEF6E7;
+  --r: var(--radius-xl);
+  --r-sm: var(--radius-md);
+  --shadow: var(--shadow-sm);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #12151b;
-    --surface: #1b1f27;
-    --surface-2: #20242e;
-    --border: #2c313d;
-    --text-primary: #eef1f6;
-    --text-secondary: #aab2c2;
-    --text-muted: #767f90;
-    --brand: #5b9bda;
-    --brand-soft: #16283a;
-    --header-1: #0a1c2c;
-    --header-2: #1c3f61;
-    --highlight: #f0a24d;
-    --highlight-soft: #3a2a17;
-    --good: #3fc23f;
-    --warning: #f0b429;
-    --critical: #f0726f;
-  --rate-bom: #3ab765;
-  --rate-regular: #f0b429;
-  --rate-ruim: #f4703f;
-  --rate-pessimo: #e35098;
-    --chart-grid: #2c2c2a;
-    --chart-axis: #45443f;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
-    --series-5: #d55181;
-    --series-6: #2fae2f;
-    --series-7: #9085e9;
-    --series-8: #e66767;
-    --series-other: #656d7c;
-    --shadow: rgba(0,0,0,0.45);
+    --background: #0A0A0A;
+    --foreground: #FAFAFA;
+    --card: #171717;
+    --card-foreground: #FAFAFA;
+    --popover: #171717;
+    --primary: #E5E5E5;
+    --primary-foreground: #171717;
+    --primary-hover: #FAFAFA;
+    --secondary: #262626;
+    --secondary-foreground: #FAFAFA;
+    --muted: #262626;
+    --muted-foreground: #A1A1A1;
+    --accent: #262626;
+    --accent-foreground: #FAFAFA;
+    --destructive: #FF6467;
+    --border: rgba(255,255,255,.10);
+    --input: rgba(255,255,255,.15);
+    --ring: #737373;
+    --ring-shadow: rgba(115,115,115,.55);
+    --page: #0A0A0A;
+    --row-hover: #1F1F1F;
+
+    --shadow-xs: 0 1px 2px 0 rgba(0,0,0,.4);
+    --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.5), 0 1px 2px -1px rgba(0,0,0,.5);
+
+    --good: #04AF4E;
+    --warning: #EFB302;
+    --critical: #F35633;
+
+    --rate-bom: #04AF4E;      --rate-bom-fg: #04AF4E;      --rate-bom-on: #0A0A0A;
+    --rate-regular: #EFB302;  --rate-regular-fg: #EFB302;  --rate-regular-on: #0A0A0A;
+    --rate-ruim: #F35633;     --rate-ruim-fg: #F35633;     --rate-ruim-on: #0A0A0A;
+    --rate-pessimo: #E7529E;  --rate-pessimo-fg: #E7529E;  --rate-pessimo-on: #0A0A0A;
+    --on-good: #0A0A0A; --on-warning: #0A0A0A; --on-destructive: #0A0A0A; --on-bronze: #FFFFFF;
+
+    --series-1: #3280DE;  --series-2: #E76530;  --series-3: #14AC77;
+    --series-4: #C58202;  --series-5: #CE648D;  --series-6: #33A02E;
+    --series-7: #6B61D1;  --series-8: #E24847;  --series-other: #8A8A8A;
+
+    --chart-grid: rgba(255,255,255,.10);
+    --chart-axis: rgba(255,255,255,.18);
+
+    --highlight: #EFB302;
+    --highlight-soft: #2A2410;
   }
 }
+
+/* escolha explícita de tema vence o sistema, nos dois sentidos */
 :root[data-theme="dark"] {
-  --bg: #12151b;
-  --surface: #1b1f27;
-  --surface-2: #20242e;
-  --border: #2c313d;
-  --text-primary: #eef1f6;
-  --text-secondary: #aab2c2;
-  --text-muted: #767f90;
-  --brand: #5b9bda;
-  --brand-soft: #16283a;
-  --header-1: #0a1c2c;
-  --header-2: #1c3f61;
-  --highlight: #f0a24d;
-  --highlight-soft: #3a2a17;
-  --good: #3fc23f;
-  --warning: #f0b429;
-  --critical: #f0726f;
-  --rate-bom: #3ab765;
-  --rate-regular: #f0b429;
-  --rate-ruim: #f4703f;
-  --rate-pessimo: #e35098;
-  --chart-grid: #2c2c2a;
-  --chart-axis: #45443f;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-5: #d55181;
-  --series-6: #2fae2f;
-  --series-7: #9085e9;
-  --series-8: #e66767;
-  --series-other: #656d7c;
-  --shadow: rgba(0,0,0,0.45);
+  --background: #0A0A0A;
+  --foreground: #FAFAFA;
+  --card: #171717;
+  --card-foreground: #FAFAFA;
+  --popover: #171717;
+  --primary: #E5E5E5;
+  --primary-foreground: #171717;
+  --primary-hover: #FAFAFA;
+  --secondary: #262626;
+  --secondary-foreground: #FAFAFA;
+  --muted: #262626;
+  --muted-foreground: #A1A1A1;
+  --accent: #262626;
+  --accent-foreground: #FAFAFA;
+  --destructive: #FF6467;
+  --border: rgba(255,255,255,.10);
+  --input: rgba(255,255,255,.15);
+  --ring: #737373;
+  --ring-shadow: rgba(115,115,115,.55);
+  --page: #0A0A0A;
+  --row-hover: #1F1F1F;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0,0,0,.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.5), 0 1px 2px -1px rgba(0,0,0,.5);
+
+  --good: #04AF4E;
+  --warning: #EFB302;
+  --critical: #F35633;
+
+  --rate-bom: #04AF4E;      --rate-bom-fg: #04AF4E;
+  --rate-regular: #EFB302;  --rate-regular-fg: #EFB302;
+  --rate-ruim: #F35633;     --rate-ruim-fg: #F35633;
+  --rate-pessimo: #E7529E;  --rate-pessimo-fg: #E7529E;
+
+  --series-1: #3280DE;  --series-2: #E76530;  --series-3: #14AC77;
+  --series-4: #C58202;  --series-5: #CE648D;  --series-6: #33A02E;
+  --series-7: #6B61D1;  --series-8: #E24847;  --series-other: #8A8A8A;
+
+  --chart-grid: rgba(255,255,255,.10);
+  --chart-axis: rgba(255,255,255,.18);
+
+  --highlight: #EFB302;
+  --highlight-soft: #2A2410;
 }
 
-html, body {
-  background: var(--bg);
-  color: var(--text-primary);
-  font-family: "IBM Plex Sans", system-ui, sans-serif;
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+html, body { background: var(--page); }
+body {
+  margin: 0;
+  font-family: Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+.app { max-width: 1400px; margin: 0 auto; padding: 24px 24px 56px; }
+
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+a { color: inherit; }
+
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px var(--ring-shadow);
 }
 
-.app { max-width: 1280px; margin: 0 auto; padding: 0 20px 48px; }
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--primary); color: var(--primary-foreground);
+  padding: 9px 15px; border-radius: var(--radius-md); font-weight: 500;
+}
+.skip:focus { left: 12px; top: 12px; }
 
+/* ==========================================================================
+   BOTÃO — anatomia do shadcn: h-9, rounded-md, text-sm, font-medium
+   ========================================================================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 36px; padding: 0 16px; white-space: nowrap;
+  border-radius: var(--radius-md); border: 1px solid transparent;
+  font-family: inherit; font-size: 14px; font-weight: 500; line-height: 1;
+  cursor: pointer; text-decoration: none;
+  transition: background-color var(--t-quick) var(--ease-out),
+              border-color var(--t-quick) var(--ease-out),
+              color var(--t-quick) var(--ease-out),
+              box-shadow var(--t-quick) var(--ease-out);
+}
+.btn:disabled { opacity: .5; pointer-events: none; }
+.btn-solid { background: var(--primary); color: var(--primary-foreground); box-shadow: var(--shadow-xs); }
+.btn-solid:hover { background: var(--primary-hover); }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--border); box-shadow: var(--shadow-xs); }
+.btn-outline:hover { background: var(--accent); color: var(--accent-foreground); }
+.btn-ghost { background: transparent; color: var(--foreground); }
+.btn-ghost:hover { background: var(--accent); color: var(--accent-foreground); }
+
+/* ==========================================================================
+   CARD — bg-card, border, rounded-xl, shadow-sm
+   ========================================================================== */
+.panel, .kpi-tile, .filters, .import-box, .import-panel {
+  background: var(--card); color: var(--card-foreground);
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+.panel { padding: 24px; margin: 0; }
+.panel-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.panel-title { font-size: 16px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+.panel-sub { font-size: 14px; color: var(--muted-foreground); margin-top: 6px; }
+
+/* ==========================================================================
+   CABEÇALHO
+   ========================================================================== */
 .topbar {
-  background: linear-gradient(180deg, var(--header-1), var(--header-2));
-  margin: 0 -20px 20px;
-  padding: 18px 20px;
-  border-radius: 0 0 14px 14px;
-  box-shadow: 0 4px 18px var(--shadow);
+  background: none; box-shadow: none; border: none; border-radius: 0;
+  padding: 0 0 20px; margin: 0 0 24px; border-bottom: 1px solid var(--border);
 }
 .topbar-inner {
-  max-width: 1280px; margin: 0 auto;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding: 0; max-width: none;
 }
-.brand { display: flex; align-items: center; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
-  font-family: "Big Shoulders Display", sans-serif;
-  font-weight: 800;
-  font-size: 28px;
-  color: #123650;
-  background: #f4f6fa;
-  width: 52px; height: 52px;
-  border-radius: 10px;
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--primary); color: var(--primary-foreground);
   display: flex; align-items: center; justify-content: center;
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.02em;
 }
-.brand h1 {
-  font-family: "Big Shoulders Display", sans-serif;
-  font-weight: 700;
-  font-size: 26px;
-  color: #ffffff;
-  margin: 0;
-  letter-spacing: 0.3px;
-}
-.brand .subtitle {
-  margin: 2px 0 0;
-  color: #d7e4f2;
-  font-size: 12.5px;
-  letter-spacing: 0.2px;
-}
-.topbar-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.meta-pill.fonte-ok { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35); }
-.meta-pill.fonte-aviso { background: rgba(240,180,41,0.22); box-shadow: inset 0 0 0 1px rgba(240,180,41,0.55); }
-.meta-pill.fonte-erro { background: rgba(208,59,59,0.25); box-shadow: inset 0 0 0 1px rgba(208,59,59,0.6); }
-.meta-pill {
-  font-size: 11.5px;
-  color: #eaf1fa;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.25);
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-family: "IBM Plex Mono", monospace;
-}
-.btn {
-  font-family: "IBM Plex Sans", sans-serif;
-  font-weight: 600;
-  font-size: 12.5px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: transform 0.12s ease, background 0.12s ease;
-}
-.btn:active { transform: translateY(1px); }
-.btn-ghost {
-  background: rgba(255,255,255,0.14);
-  border-color: rgba(255,255,255,0.32);
-  color: #ffffff;
-}
-.btn-ghost:hover { background: rgba(255,255,255,0.22); }
-.btn-solid {
-  background: var(--brand);
-  color: #ffffff;
-}
-.btn-solid:hover { filter: brightness(1.08); }
-.btn-outline {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-.btn-outline:hover { border-color: var(--brand); color: var(--brand); }
+.brand h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.brand h1 .brand-am { color: var(--muted-foreground); }
+.subtitle { font-size: 13px; color: var(--muted-foreground); margin: 2px 0 0; }
+.topbar-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* ==========================================================================
+   BADGE — rounded-md, px-2, py-0.5, text-xs, font-medium
+   ========================================================================== */
+.tag, .meta-pill, .pill-count, .saude-pill, .tab-selo, .qbar-faixa, .score-verdict-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: var(--radius-sm); border: 1px solid transparent;
+  padding: 2px 8px; font-size: 12px; font-weight: 500; line-height: 1.35;
+  white-space: nowrap;
+}
+.tag { background: var(--secondary); color: var(--secondary-foreground); }
+.meta-pill { background: var(--secondary); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.meta-pill.new { background: transparent; border-color: var(--border); color: var(--muted-foreground); }
+.meta-pill.upd { background: transparent; border-color: var(--border); color: var(--muted-foreground); }
+.meta-pill::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--muted-foreground); flex-shrink: 0;
+}
+.meta-pill.new::before { background: var(--good); }
+.meta-pill.upd::before { background: var(--warning); }
+
+/* ==========================================================================
+   KPI
+   ========================================================================== */
 .kpis {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px; margin-bottom: 24px;
 }
-.kpi-tile {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
-  box-shadow: 0 1px 2px var(--shadow);
-}
+.kpi-tile { padding: 20px; display: flex; flex-direction: column; gap: 4px; }
 .kpi-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
-  font-weight: 600;
+  font-size: 13px; font-weight: 500; color: var(--muted-foreground);
+  letter-spacing: 0; text-transform: none;
 }
 .kpi-value {
-  font-family: "Big Shoulders Display", sans-serif;
-  font-weight: 700;
-  font-size: 34px;
-  color: var(--text-primary);
-  line-height: 1.1;
-  margin-top: 4px;
-  font-variant-numeric: tabular-nums;
+  font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums; margin-top: 2px;
 }
-.kpi-caption { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.kpi-caption { font-size: 12px; color: var(--muted-foreground); }
 
-.board {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 18px;
-  align-items: start;
-}
-@media (max-width: 860px) {
-  .board { grid-template-columns: 1fr; }
-  .kpis { grid-template-columns: repeat(2, 1fr); }
-}
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+.board { display: grid; grid-template-columns: 250px 1fr; gap: 20px; align-items: start; }
+.content { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
+/* ==========================================================================
+   FILTROS — padrão "sidebar menu" do shadcn
+   ========================================================================== */
 .filters {
-  position: sticky; top: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex; flex-direction: column; gap: 16px;
+  position: sticky; top: 16px; padding: 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: calc(100vh - 32px); overflow-y: auto; overscroll-behavior: contain;
 }
-.filters-head { display: flex; align-items: center; justify-content: space-between; }
-.filters-title { font-weight: 700; font-size: 13px; }
+.filters::-webkit-scrollbar { width: 8px; }
+.filters::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+.filters::-webkit-scrollbar-track { background: transparent; }
+.filters-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 0 4px 4px;
+}
+.filters-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .clear-link {
-  font-size: 11.5px; color: var(--brand); cursor: pointer; background: none; border: none;
-  font-family: inherit; font-weight: 600; padding: 0;
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+  font-family: inherit; font-size: 12px; color: var(--muted-foreground);
+  border-radius: var(--radius-sm);
+  transition: color var(--t-quick) var(--ease-out);
 }
-.clear-link:hover { text-decoration: underline; }
+.clear-link:hover { color: var(--foreground); }
 
-.filter-step { border-top: 1px dashed var(--border); padding-top: 12px; }
-.filter-step:first-of-type { border-top: none; padding-top: 0; }
+.filter-step { padding: 8px 0; border-top: 1px solid var(--border); }
+.filter-step.periodo { border-top: none; padding-top: 0; }
 .step-label {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--text-muted); font-weight: 700; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 7px; padding: 0 4px;
+  margin-bottom: 6px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--muted-foreground);
 }
 .step-num {
-  width: 17px; height: 17px; border-radius: 50%;
-  background: var(--surface-2); color: var(--text-secondary);
+  width: 16px; height: 16px; flex-shrink: 0; border-radius: 4px;
+  background: var(--secondary); color: var(--muted-foreground);
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; flex-shrink: 0;
+  font-size: 10px; font-weight: 600;
+  transition: background-color var(--t-quick) var(--ease-out), color var(--t-quick) var(--ease-out);
 }
-.step-num.active { background: var(--brand); color: #fff; }
-.pill-list { display: flex; flex-direction: column; gap: 5px; }
+.step-num.active { background: var(--primary); color: var(--primary-foreground); }
+
+.pill-list { display: flex; flex-direction: column; gap: 1px; }
 .pill {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 6px 9px;
-  border-radius: 7px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12.5px;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  width: 100%;
+  width: 100%; min-height: 32px; padding: 6px 8px; text-align: left;
+  background: none; border: none; border-radius: var(--radius-md);
+  font-family: inherit; font-size: 13px; color: var(--foreground);
+  cursor: pointer; overflow-wrap: anywhere;
+  transition: background-color var(--t-quick) var(--ease-out), color var(--t-quick) var(--ease-out);
 }
-.pill:hover { background: var(--surface-2); }
-.pill.active {
-  background: var(--brand-soft);
-  border-color: var(--brand);
-  color: var(--brand);
-  font-weight: 600;
-}
+.pill:hover { background: var(--accent); }
+.pill.picked { background: var(--accent); font-weight: 500; }
 .pill-count {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--surface-2);
-  padding: 1px 6px;
-  border-radius: 999px;
-  flex-shrink: 0;
+  background: none; border: none; padding: 0; flex-shrink: 0;
+  font-size: 11px; color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
 }
-.pill.active .pill-count { color: var(--brand); background: var(--brand-soft); }
-.date-inputs { display: flex; gap: 6px; margin-top: 6px; }
-.date-inputs input {
-  flex: 1; min-width: 0;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11.5px;
-  padding: 5px 6px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
+.pill.picked .pill-count { color: var(--foreground); }
+
+.date-inputs { display: flex; flex-direction: column; gap: 6px; padding: 6px 4px 2px; }
+
+/* ---- input / select / textarea — h-9, rounded-md, border-input --------- */
+.date-inputs input, .mobile-sort-select, textarea {
+  width: 100%; font-family: inherit; font-size: 14px; color: var(--foreground);
+  background: var(--background); border: 1px solid var(--input);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-xs);
+  transition: border-color var(--t-quick) var(--ease-out), box-shadow var(--t-quick) var(--ease-out);
+}
+.date-inputs input, .mobile-sort-select { height: 36px; padding: 0 10px; }
+textarea {
+  padding: 10px 12px; min-height: 96px; resize: vertical; line-height: 1.55;
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
 }
 
-.content { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 18px 20px;
+/* ==========================================================================
+   ABAS — TabsList bg-muted p-[3px] · TabsTrigger ativo bg-background
+   ========================================================================== */
+.view-tabs {
+  display: inline-flex; align-items: center; gap: 0;
+  padding: 3px; border-radius: var(--radius-lg);
+  background: var(--muted); border: none; width: 100%;
 }
-.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.panel-title { font-weight: 700; font-size: 15px; }
-.panel-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.empty-state { color: var(--text-muted); font-size: 13px; padding: 18px 0; text-align: center; }
-
-/* Ranking */
-.rank-row { display: grid; grid-template-columns: 26px 1fr 190px 56px; align-items: center; gap: 10px; padding: 7px 0; }
-.rank-num {
-  font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px;
-  color: var(--text-muted); text-align: center;
+.view-tab {
+  flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px; border: none; background: transparent;
+  border-radius: var(--radius-md); cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 500; white-space: nowrap;
+  color: var(--muted-foreground);
+  transition: background-color var(--t-fast) var(--ease-out),
+              color var(--t-fast) var(--ease-out),
+              box-shadow var(--t-fast) var(--ease-out);
 }
-.rank-row.top1 .rank-num { color: var(--highlight); font-weight: 700; }
-.rank-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rank-name .mat { color: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 11px; margin-left: 5px; }
-.rank-bar-track { height: 12px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
-.rank-bar-fill { height: 100%; border-radius: 4px; }
-.rank-count { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+.view-tab:hover { color: var(--foreground); }
+.view-tab.active {
+  background: var(--background); color: var(--foreground); box-shadow: var(--shadow-xs);
+}
+.tab-selo {
+  min-width: 17px; height: 17px; padding: 0 5px; justify-content: center;
+  border-radius: 999px; background: var(--destructive); color: var(--on-destructive);
+  font-size: 10px; font-weight: 600;
+}
 
-/* Podium */
+/* ==========================================================================
+   PÓDIO
+   ========================================================================== */
 .podium-scroll { overflow-x: auto; }
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 22px; padding: 10px 8px 0; margin-bottom: 8px; min-width: min-content; }
-.podium-col { display: flex; flex-direction: column; align-items: center; width: 128px; }
+.podium {
+  display: flex; align-items: flex-end; justify-content: center; gap: 24px;
+  padding: 8px 8px 0; margin-bottom: 4px; min-width: min-content;
+}
+.podium-col { display: flex; flex-direction: column; align-items: center; width: 132px; }
 .podium-badge-row { position: relative; }
 .podium-avatar {
   width: 52px; height: 52px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 19px;
-  border: 3px solid var(--surface);
-  box-shadow: 0 2px 8px var(--shadow);
+  font-size: 16px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.01em;
 }
-.podium-col.rank-1 .podium-avatar { width: 64px; height: 64px; font-size: 22px; }
+.podium-col.rank-1 .podium-avatar { width: 64px; height: 64px; font-size: 21px; }
 .podium-medal {
-  position: absolute; top: -4px; right: -4px;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--critical); color: #fff;
+  position: absolute; top: -3px; right: -5px;
+  width: 21px; height: 21px; border-radius: 50%;
+  background: var(--muted-foreground); color: var(--card);
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; font-family: "IBM Plex Mono", monospace;
-  border: 2px solid var(--surface);
+  font-size: 10px; font-weight: 600; border: 2px solid var(--card);
 }
+.podium-col.rank-1 .podium-medal { background: var(--highlight); color: var(--on-warning); }
+.podium-col.rank-3 .podium-medal { background: #9C6B3F; color: var(--on-bronze); }
 .podium-value {
-  font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 20px;
-  color: var(--text-primary); margin-top: 8px; font-variant-numeric: tabular-nums;
+  font-size: 24px; font-weight: 600; margin-top: 10px;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
 }
-.podium-value-unit { font-size: 10.5px; color: var(--text-muted); font-weight: 500; margin-top: -2px; text-transform: uppercase; letter-spacing: 0.4px; }
+.podium-value-unit {
+  font-size: 11px; color: var(--muted-foreground); font-weight: 500;
+  text-transform: uppercase; letter-spacing: .05em;
+}
 .podium-bar {
-  width: 100%; margin-top: 10px;
-  border-radius: 8px 8px 3px 3px;
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-  padding: 10px 8px 12px;
-  gap: 6px;
-  position: relative;
-  box-sizing: border-box;
+  width: 100%; min-height: 84px; margin-top: 12px;
+  border: 1px solid var(--border); border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 12px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  text-align: center; color: var(--foreground); background: var(--muted);
+  border-top: 3px solid var(--muted-foreground);
 }
-.podium-col.rank-1 .podium-bar { min-height: 118px; background: var(--highlight); }
-.podium-col.rank-2 .podium-bar { min-height: 88px; background: var(--brand); }
-.podium-col.rank-3 .podium-bar { min-height: 66px; background: var(--brand); opacity: 0.78; }
-.podium-icon { width: 22px; height: 22px; color: rgba(255,255,255,0.85); }
-.podium-name {
-  color: #fff; font-size: 11.5px; font-weight: 600; text-align: center;
-  padding: 2px 6px 0; line-height: 1.3; overflow-wrap: break-word; width: 100%;
-}
-.rank-list-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700; margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+.podium-col.rank-1 .podium-bar { min-height: 116px; border-top-color: var(--highlight); }
+.podium-col.rank-2 .podium-bar { min-height: 84px; border-top-color: var(--muted-foreground); }
+.podium-col.rank-3 .podium-bar { min-height: 64px; border-top-color: #9C6B3F; }
+.podium-icon { width: 20px; height: 20px; color: var(--muted-foreground); }
+.podium-col.rank-1 .podium-icon { color: var(--highlight); }
+.podium-col.rank-3 .podium-icon { color: #9C6B3F; }
+.podium-name { font-size: 12px; font-weight: 500; line-height: 1.35; overflow-wrap: break-word; }
 
-/* Daily chart */
-.daily-scroll { overflow-x: auto; padding-bottom: 4px; }
-.chart-svg { display: block; }
-.chart-svg .grid-line { stroke: var(--chart-grid); stroke-width: 1; }
-.chart-svg .axis-line { stroke: var(--chart-axis); stroke-width: 1; }
-.chart-svg .axis-label { fill: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 10px; }
-.chart-svg .day-label { fill: var(--text-muted); font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
-.chart-svg .day-total { fill: var(--text-secondary); font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.chart-svg .bar-seg { cursor: pointer; }
-.legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
-.legend-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+/* ==========================================================================
+   RANKING
+   ========================================================================== */
+.rank-list-head {
+  font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--muted-foreground); margin: 20px 0 8px;
+}
+.rank-row {
+  display: grid; grid-template-columns: 26px minmax(0, 260px) 1fr 36px;
+  align-items: center; gap: 14px; padding: 8px; border-radius: var(--radius-md);
+  transition: background-color var(--t-quick) var(--ease-out);
+}
+.rank-row:hover { background: var(--row-hover); }
+.rank-num { font-size: 12px; color: var(--muted-foreground); text-align: right; font-variant-numeric: tabular-nums; }
+.rank-name { font-size: 13px; min-width: 0; overflow-wrap: break-word; }
+.rank-name .mat {
+  font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px;
+  color: var(--muted-foreground); display: block; margin-top: 1px;
+}
+.rank-bar-track { height: 8px; background: var(--muted); border-radius: 99px; overflow: hidden; }
+.rank-bar-fill { height: 100%; border-radius: 99px; transform-origin: left center; animation: t-bar var(--t-medium) var(--ease-out) both; }
+.rank-count { font-size: 14px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   GRÁFICO POR DIA
+   ========================================================================== */
+.daily-scroll { overflow-x: auto; }
+.chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.grid-line { stroke: var(--chart-grid); stroke-width: 1; }
+.axis-line { stroke: var(--chart-axis); stroke-width: 1; }
+.axis-label { fill: var(--muted-foreground); font-size: 10px; font-family: "Geist Mono", ui-monospace, monospace; }
+.day-label { fill: var(--muted-foreground); font-size: 10px; font-family: "Geist Mono", ui-monospace, monospace; }
+.day-total { fill: var(--foreground); font-size: 11px; font-weight: 600; }
+.bar-seg { transition: opacity var(--t-quick) var(--ease-out); }
+.bar-seg:hover { opacity: .8; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted-foreground); }
+.legend-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
 
 .viz-tooltip {
-  position: fixed; z-index: 50; pointer-events: none;
-  background: var(--text-primary); color: var(--bg);
-  font-size: 11.5px; padding: 7px 10px; border-radius: 7px;
-  box-shadow: 0 4px 14px var(--shadow);
-  max-width: 220px; opacity: 0; transition: opacity 0.08s ease;
-  font-family: "IBM Plex Sans", sans-serif;
+  position: fixed; z-index: 60; pointer-events: none; opacity: 0;
+  background: var(--popover, var(--card)); color: var(--foreground);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm); padding: 7px 10px; font-size: 12px;
+  transition: opacity var(--t-quick) var(--ease-out);
 }
 .viz-tooltip.show { opacity: 1; }
-.viz-tooltip b { font-family: "IBM Plex Mono", monospace; }
 
-/* Table */
+/* ==========================================================================
+   TABELA — h-10 no th, p-2 no td, hover na linha
+   ========================================================================== */
 .table-scroll { overflow-x: auto; }
-table.log { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+table.log { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 760px; }
 table.log th {
-  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px;
-  color: var(--text-muted); font-weight: 700; padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer; white-space: nowrap; user-select: none;
+  height: 40px; padding: 0 8px; text-align: left; vertical-align: middle;
+  font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted-foreground); border-bottom: 1px solid var(--border);
+  white-space: nowrap; cursor: pointer; user-select: none;
+  transition: color var(--t-quick) var(--ease-out);
 }
-table.log th:hover { color: var(--brand); }
-table.log th .arrow { font-size: 9px; margin-left: 3px; opacity: 0.6; }
-table.log td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-table.log tbody tr:hover { background: var(--surface-2); }
-.cell-mono { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.cell-missing { color: var(--warning); font-style: italic; font-size: 11.5px; }
-.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--text-secondary); }
-
-/* Import panel */
-.import-panel { margin-top: 20px; }
-.import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.import-grid > .import-box:last-child { grid-column: 1 / -1; }
-@media (max-width: 860px) { .import-grid { grid-template-columns: 1fr; } }
-.import-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-.import-box h3 { margin: 0 0 4px; font-size: 13.5px; }
-.import-box .hint { font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
-.import-box textarea {
-  width: 100%; min-height: 110px; resize: vertical;
-  font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
-  padding: 8px; border-radius: 7px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--text-primary);
+table.log th:hover { color: var(--foreground); }
+table.log th .arrow { margin-left: 4px; opacity: .6; }
+table.log td {
+  padding: 10px 8px; vertical-align: middle;
+  border-bottom: 1px solid var(--border); overflow-wrap: break-word;
 }
-.import-box .actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.import-status { font-size: 11.5px; }
-.import-status.ok { color: var(--good); }
-.import-status.err { color: var(--critical); }
+table.log tbody tr { transition: background-color var(--t-quick) var(--ease-out); }
+table.log tbody tr:hover { background: var(--row-hover); }
+table.log tbody tr:last-child td { border-bottom: none; }
+.cell-mono { font-family: "Geist Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted-foreground); }
+.cell-missing { color: var(--warning); font-style: italic; }
 
-.import-preview { margin-top: 10px; background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: 10px 12px; }
-.import-preview .preview-periodo { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 7px; }
-.import-preview .preview-periodo b { color: var(--text-primary); }
-.import-preview .preview-counts { display: flex; flex-wrap: wrap; gap: 5px 16px; margin-bottom: 9px; font-size: 11.5px; color: var(--text-muted); }
-.import-preview .preview-counts .stat b { font-size: 13px; color: var(--text-primary); }
-.import-preview .preview-counts .stat.new b { color: var(--good); }
-.import-preview .preview-counts .stat.upd b { color: var(--brand); }
-.import-preview .preview-counts .stat.skip b { color: var(--warning); }
-.import-preview .preview-actions { display: flex; gap: 8px; }
-.import-preview .preview-actions button { padding: 6px 12px; font-size: 11.5px; }
+.mobile-sort-row { display: none; align-items: center; gap: 10px; margin-bottom: 14px; }
+.mobile-sort-label { font-size: 12px; font-weight: 500; color: var(--muted-foreground); white-space: nowrap; }
+.mobile-sort-select { max-width: 100%; }
 
-.file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-.file-name { font-size: 11.5px; color: var(--text-muted); font-family: "IBM Plex Mono", monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
-.file-name.picked { color: var(--brand); }
-.paste-fallback { margin-top: 10px; }
-.paste-fallback summary { font-size: 11.5px; color: var(--text-muted); cursor: pointer; user-select: none; }
-.paste-fallback summary:hover { color: var(--brand); }
-.paste-fallback textarea { margin-top: 8px; }
-.paste-fallback .actions { margin-top: 8px; }
-
-footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 24px; }
-
-.view-tabs { display: flex; gap: 4px; margin-bottom: 14px; background: var(--surface-2); padding: 4px; border-radius: 10px; }
-.view-tab {
-  flex: 1; padding: 9px 14px; border: none; border-radius: 7px; cursor: pointer;
-  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-secondary);
-  background: transparent; transition: background 0.15s, color 0.15s;
+.empty-state {
+  padding: 36px 20px; text-align: center; color: var(--muted-foreground); font-size: 14px;
 }
-.view-tab:hover { color: var(--brand); }
-.view-tab.active { background: var(--surface); color: var(--brand); box-shadow: 0 1px 3px var(--shadow); }
 
-.score-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
-.score-dial { position: relative; width: 132px; height: 132px; flex-shrink: 0; }
+/* ==========================================================================
+   IMPORTAÇÃO
+   ========================================================================== */
+.import-panel { padding: 24px; margin-bottom: 20px; }
+.import-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.import-box { padding: 18px; box-shadow: none; background: var(--muted); }
+.import-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.hint { font-size: 12px; color: var(--muted-foreground); line-height: 1.6; margin-bottom: 12px; }
+.file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.file-name { font-size: 12px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.import-status { font-size: 12px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.import-status.grave { color: var(--critical); }
+.paste-fallback { margin-top: 4px; }
+.paste-fallback summary {
+  cursor: pointer; font-size: 12px; color: var(--muted-foreground);
+  padding: 4px 0; border-radius: var(--radius-sm); list-style: none;
+  transition: color var(--t-quick) var(--ease-out);
+}
+.paste-fallback summary::-webkit-details-marker { display: none; }
+.paste-fallback summary::before { content: "▸ "; display: inline-block; transition: transform var(--t-fast) var(--ease-out); }
+.paste-fallback[open] summary::before { transform: rotate(90deg); }
+.paste-fallback summary:hover { color: var(--foreground); }
+.import-preview {
+  margin-top: 14px; padding: 14px; background: var(--background);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.preview-counts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.stat {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: var(--radius-sm);
+  background: var(--secondary); font-size: 12px; font-weight: 500;
+}
+.preview-periodo { font-size: 12px; color: var(--muted-foreground); margin-bottom: 10px; }
+.preview-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ==========================================================================
+   QUALIDADE
+   ========================================================================== */
+.score-hero { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
+.score-dial { position: relative; width: 124px; height: 124px; flex-shrink: 0; }
 .score-dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .score-dial-center {
   position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 1px;
+  align-items: center; justify-content: center;
 }
-.score-dial-value { font-size: 34px; font-weight: 700; line-height: 1; }
-.score-dial-max { font-size: 11px; color: var(--text-muted); }
-.score-verdict { min-width: 0; }
+.score-dial-value { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.score-dial-max { font-size: 11px; color: var(--muted-foreground); }
+.score-verdict { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .score-verdict-badge {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 6px 13px; border-radius: 999px; font-size: 15px; font-weight: 700; color: #fff;
+  align-self: flex-start; padding: 4px 10px; font-size: 13px; font-weight: 500; color: #FFFFFF;
 }
-.score-verdict-text { font-size: 13px; color: var(--text-secondary); margin-top: 9px; line-height: 1.55; max-width: 46ch; }
-.score-verdict-text b { color: var(--text-primary); }
+.score-verdict-text { font-size: 14px; color: var(--muted-foreground); line-height: 1.65; max-width: 62ch; }
+.score-verdict-text strong { color: var(--foreground); font-weight: 600; }
 
-.rate-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; }
-.rate-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
-.rate-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.dist-bar { display: flex; height: 26px; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 10px; }
+.dist-seg {
+  display: flex; align-items: center; justify-content: center;
+  color: #FFFFFF; font-size: 11px; font-weight: 600; min-width: 0;
+  transform-origin: left center; animation: t-bar var(--t-medium) var(--ease-out) both;
+}
+.rate-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.rate-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); }
+.rate-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
 
-.dist-bar { display: flex; height: 30px; border-radius: 6px; overflow: hidden; gap: 2px; background: var(--surface); }
-.dist-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; min-width: 0; }
-
-.qbar-row { display: grid; grid-template-columns: minmax(110px, 230px) 1fr 62px; align-items: center; gap: 12px; padding: 7px 0; }
-.qbar-row + .qbar-row { border-top: 1px solid var(--border); }
-.qbar-label { font-size: 12.5px; min-width: 0; overflow-wrap: break-word; }
-.qbar-label .qbar-sub { display: block; font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
-.qbar-track { height: 12px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
-.qbar-fill { height: 100%; border-radius: 4px; }
-.qbar-value { text-align: right; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.qbar-value .qbar-faixa { display: block; font-size: 10px; font-weight: 600; color: var(--text-muted); }
-
-.item-row { display: grid; grid-template-columns: 46px 1fr 118px 76px; align-items: center; gap: 12px; padding: 9px 0; }
-.item-row + .item-row { border-top: 1px solid var(--border); }
-.item-score { font-size: 16px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
-.item-name { font-size: 12.5px; min-width: 0; overflow-wrap: break-word; }
-.item-block { display: block; font-size: 10.5px; color: var(--text-muted); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
-.item-mini { display: flex; height: 10px; gap: 1px; border-radius: 3px; overflow: hidden; }
-.item-repeat { font-size: 11px; color: var(--text-secondary); text-align: right; line-height: 1.35; }
-.item-repeat b { display: block; font-size: 13px; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.item-row.is-systemic { box-shadow: inset 3px 0 0 var(--brand); padding-left: 11px; }
-
+.qbar-row {
+  display: grid; grid-template-columns: minmax(150px, 230px) 1fr 62px;
+  align-items: center; gap: 14px; padding: 9px 8px; border-radius: var(--radius-md);
+  transition: background-color var(--t-quick) var(--ease-out);
+}
+.qbar-row:hover { background: var(--row-hover); }
+.qbar-label { font-size: 13px; font-weight: 500; min-width: 0; overflow-wrap: break-word; }
+.qbar-sub { font-size: 11px; color: var(--muted-foreground); font-weight: 400; display: block; margin-top: 1px; }
+.qbar-track { height: 8px; background: var(--muted); border-radius: 99px; overflow: hidden; }
+.qbar-fill { height: 100%; border-radius: 99px; transform-origin: left center; animation: t-bar var(--t-medium) var(--ease-out) both; }
+.qbar-value { text-align: right; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.qbar-faixa {
+  display: block; padding: 0; background: none; border: none;
+  font-size: 10px; font-weight: 400; color: var(--muted-foreground); text-align: right;
+}
 .qual-note {
-  margin-top: 14px; padding: 10px 12px; border-radius: 8px;
-  background: var(--surface-2); border-left: 3px solid var(--brand);
-  font-size: 11.5px; color: var(--text-secondary); line-height: 1.6;
+  margin-top: 16px; padding: 12px 14px; background: var(--muted);
+  border-radius: var(--radius-lg); font-size: 12px; color: var(--muted-foreground); line-height: 1.6;
 }
-.qual-note b { color: var(--text-primary); }
+
+.item-row {
+  display: grid; grid-template-columns: 46px 1fr 96px 72px;
+  align-items: center; gap: 14px; padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--t-quick) var(--ease-out);
+}
+.item-row:last-child { border-bottom: none; }
+.item-row:hover { background: var(--row-hover); }
+.item-row.is-systemic { box-shadow: inset 3px 0 0 var(--foreground); padding-left: 12px; }
+.item-score { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.item-name { font-size: 13px; min-width: 0; overflow-wrap: break-word; }
+.item-block { font-size: 11px; color: var(--muted-foreground); display: block; margin-top: 2px; }
+.item-mini { display: flex; height: 8px; border-radius: 99px; overflow: hidden; gap: 1px; }
+.item-repeat { font-size: 11px; color: var(--muted-foreground); text-align: right; line-height: 1.35; }
+
+/* ==========================================================================
+   SAÚDE DOS DADOS
+   ========================================================================== */
+.saude-contagem { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.saude-pill { padding: 3px 9px; font-weight: 500; }
+.saude-pill.grave { background: var(--destructive); color: var(--on-destructive); }
+.saude-pill.alerta { background: var(--warning); color: var(--on-warning); }
+.saude-item {
+  padding: 14px; border-radius: var(--radius-lg); margin-bottom: 10px;
+  background: var(--muted); border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+}
+.saude-item.grave { border-left-color: var(--destructive); }
+.saude-item-topo {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin-bottom: 6px; font-size: 14px; font-weight: 500;
+}
+.saude-tag {
+  font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: var(--radius-sm); color: var(--on-warning); background: var(--warning);
+}
+.saude-tag.grave { background: var(--destructive); color: var(--on-destructive); }
+.saude-detalhe { font-size: 13px; color: var(--muted-foreground); line-height: 1.65; }
+.saude-ids { margin-top: 7px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; color: var(--muted-foreground); }
+.saude-limpo {
+  display: flex; align-items: center; gap: 14px; padding: 20px;
+  background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.saude-limpo-icone {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: var(--good); color: var(--on-good);
+  display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 600;
+}
+.saude-limpo-sub { font-size: 13px; color: var(--muted-foreground); margin-top: 2px; }
+
+/* ==========================================================================
+   RODAPÉ
+   ========================================================================== */
+.foot {
+  margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+  text-align: center; font-size: 12px; color: var(--muted-foreground);
+}
+.build-stamp { font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; opacity: .8; }
+
+/* ==========================================================================
+   MOVIMENTO — discreto, tokens do transitions.dev
+   ========================================================================== */
+@keyframes t-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes t-view-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#viewFreq, #viewQual, #viewSaude {
+  display: flex; flex-direction: column; gap: 20px;
+  animation: t-view-in var(--t-fast) var(--ease-out) both;
+}
+#viewFreq[hidden], #viewQual[hidden], #viewSaude[hidden] { display: none; }
+
+/* ==========================================================================
+   MODIFICADORES DE ESTADO E DETALHES
+   Bloco conferido seletor a seletor contra a folha anterior: cada regra
+   aqui existe porque o HTML/JS aplica essa classe em tempo de execução.
+   ========================================================================== */
+
+/* ---- filtro selecionado (o JS usa .active, não .picked) ----------------- */
+.pill.active { background: var(--accent); color: var(--accent-foreground); font-weight: 500; }
+.pill.active .pill-count { color: var(--accent-foreground); }
+/* período: vira fileira de chips, e o escolhido fica sólido */
+.filter-step.periodo .pill-list { flex-direction: row; flex-wrap: wrap; gap: 6px; padding: 0 2px; }
+.filter-step.periodo .pill {
+  width: auto; min-height: 28px; padding: 0 10px; justify-content: center;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--background); font-size: 12px;
+}
+.filter-step.periodo .pill:hover { background: var(--accent); }
+.filter-step.periodo .pill.active {
+  background: var(--primary); color: var(--primary-foreground); border-color: var(--primary);
+}
+
+/* ---- origem dos dados --------------------------------------------------- */
+.meta-pill { white-space: normal; max-width: 100%; }
+.meta-pill.fonte-ok { color: var(--good); background: var(--secondary); }
+.meta-pill.fonte-ok::before { background: var(--good); }
+.meta-pill.fonte-aviso { color: var(--warning); background: var(--highlight-soft); border-color: transparent; }
+.meta-pill.fonte-aviso::before { background: var(--warning); }
+.meta-pill.fonte-erro { color: var(--destructive); background: var(--secondary); border-color: transparent; }
+.meta-pill.fonte-erro::before { background: var(--destructive); }
+
+/* ---- importação --------------------------------------------------------- */
+.import-status.ok { color: var(--good); }
+.import-status.err { color: var(--destructive); }
+.file-name.picked { color: var(--foreground); font-weight: 500; }
+.import-grid > .import-box:last-child { grid-column: 1 / -1; }
+.import-box textarea { min-height: 110px; }
+.paste-fallback textarea, .paste-fallback .actions { margin-top: 9px; }
+.import-preview .preview-counts { gap: 6px 14px; font-size: 12px; color: var(--muted-foreground); }
+.import-preview .preview-counts .stat b { font-size: 13px; font-weight: 600; color: var(--foreground); }
+.import-preview .preview-counts .stat.new b { color: var(--good); }
+.import-preview .preview-counts .stat.upd b { color: var(--foreground); }
+.import-preview .preview-counts .stat.skip b { color: var(--warning); }
+.import-preview .preview-periodo b { color: var(--foreground); font-weight: 500; }
+.import-preview .preview-actions button { height: 32px; padding: 0 13px; font-size: 13px; }
+
+/* ---- negritos dentro de texto secundário -------------------------------- */
+.score-verdict-text b, .qual-note b, .preview-periodo b { color: var(--foreground); font-weight: 600; }
+.saude-item-topo b { font-weight: 600; }
+.item-repeat b {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--foreground); font-variant-numeric: tabular-nums;
+}
+
+/* ---- divisórias entre linhas -------------------------------------------- */
+.qbar-row + .qbar-row { border-top: 1px solid var(--border); }
+
+/* ---- pódio: 2º lugar ---------------------------------------------------- */
+.podium-col.rank-2 .podium-icon { color: var(--muted-foreground); }
+
+/* ---- foco visível: precisa vir depois das variantes de botão, senão a
+   borda do .btn-outline ganha por ordem de origem ------------------------- */
+.btn:focus-visible, .pill:focus-visible, .view-tab:focus-visible,
+.clear-link:focus-visible, .paste-fallback summary:focus-visible,
+.mobile-sort-select:focus-visible, .date-inputs input:focus-visible,
+textarea:focus-visible, table.log th:focus-visible {
+  outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring-shadow);
+}
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+@media (max-width: 900px) {
+  .app { padding: 16px 16px 40px; }
+  .board { grid-template-columns: 1fr; }
+  .filters { position: static; top: auto; max-height: none; overflow-y: visible; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+}
 
 @media (max-width: 640px) {
-  .score-hero { gap: 14px; }
-  .score-dial { width: 108px; height: 108px; }
-  .score-dial-value { font-size: 28px; }
-  .qbar-row { grid-template-columns: minmax(90px, 1fr) 80px 50px; gap: 8px; }
-  .item-row { grid-template-columns: 40px 1fr 62px; gap: 8px; }
-  .item-repeat { display: none; }
-}
+  .topbar { padding-bottom: 16px; margin-bottom: 20px; }
+  .topbar-inner { align-items: flex-start; }
+  .brand h1 { font-size: 17px; }
+  .topbar-meta { width: 100%; }
+  .kpi-tile { padding: 16px; }
+  .kpi-value { font-size: 26px; }
+  .panel, .import-panel { padding: 18px; }
+  .view-tabs { flex-wrap: wrap; }
+  .view-tab { flex: 1 1 auto; font-size: 12px; padding: 0 8px; }
 
-.mobile-sort-row { display: none; align-items: center; gap: 8px; margin-bottom: 10px; }
-.mobile-sort-label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
-.mobile-sort-select {
-  flex: 1; min-width: 0; padding: 7px 8px; border-radius: 7px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--text-primary); font-size: 12.5px; font-family: inherit;
-}
-
-/* Below 860px, .board collapses to a single column, so filters and content
-   share the same column instead of sitting side by side. A sticky filters
-   panel in that layout floats over the content scrolling underneath it in
-   that same column — pin it only when there's a separate column for it to
-   stick within. Placed after the base .filters rule so it actually wins. */
-@media (max-width: 860px) {
-  .filters { position: static; top: auto; }
-}
-
-/* Phone-width overrides — placed last so they win the cascade regardless of
-   where the base rule they adjust lives above. Goal: nothing requires an
-   undiscoverable sideways scroll to be seen. */
-@media (max-width: 640px) {
-  /* Podium: shrink so all 3 places fit on screen without scrolling */
   .podium-scroll { overflow-x: visible; }
   .podium { gap: 8px; padding: 6px 0 0; justify-content: space-between; }
-  .podium-col { width: 31%; max-width: 108px; }
-  .podium-avatar { width: 38px; height: 38px; font-size: 13px; }
-  .podium-col.rank-1 .podium-avatar { width: 48px; height: 48px; font-size: 16px; }
-  .podium-name { font-size: 10.5px; }
-  .podium-value { font-size: 18px; }
-  .podium-value-unit { font-size: 8.5px; }
-  .podium-medal { width: 17px; height: 17px; }
+  .podium-col { width: 31%; max-width: 110px; }
+  .podium-avatar { width: 40px; height: 40px; font-size: 13px; }
+  .podium-col.rank-1 .podium-avatar { width: 50px; height: 50px; font-size: 16px; }
+  .podium-name { font-size: 11px; }
+  .podium-value { font-size: 19px; }
+  .podium-value-unit { font-size: 9px; }
+  .podium-medal { width: 17px; height: 17px; font-size: 9px; }
   .podium-icon { width: 16px; height: 16px; }
 
-  /* Sort control replaces click-to-sort table header on phones */
-  .mobile-sort-row { display: flex; }
+  .rank-row { grid-template-columns: 22px 1fr 72px 32px; gap: 10px; }
 
-  /* Log table becomes stacked cards instead of a wide scrolling table —
-     every field visible without swiping sideways */
   .table-scroll { overflow-x: visible; }
-  table.log { min-width: 0; width: 100%; }
+  table.log { min-width: 0; }
   table.log thead { display: none; }
   table.log, table.log tbody, table.log tr, table.log td { display: block; width: auto; }
   table.log tr {
-    border: 1px solid var(--border); border-radius: 10px;
-    padding: 10px 12px; margin-bottom: 8px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 12px 14px; margin-bottom: 10px; background: var(--muted);
   }
   table.log tr:last-child { margin-bottom: 0; }
+  table.log tr:hover { background: var(--muted); }
   table.log td {
     display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
     padding: 5px 0; border: none; text-align: right;
   }
   table.log td::before {
-    content: attr(data-label); font-size: 10.5px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.3px; color: var(--text-muted); text-align: left; flex-shrink: 0;
+    content: attr(data-label); font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted-foreground); text-align: left; flex-shrink: 0;
   }
+
+  .mobile-sort-row { display: flex; }
+  .score-hero { gap: 16px; }
+  .score-dial { width: 104px; height: 104px; }
+  .score-dial-value { font-size: 26px; }
+  .qbar-row { grid-template-columns: minmax(90px, 1fr) 80px 52px; gap: 10px; }
+  .item-row { grid-template-columns: 40px 1fr 64px; gap: 10px; }
+  .item-repeat { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
 </head>
@@ -605,13 +862,13 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
       <div class="brand">
         <span class="brand-mark">AM</span>
         <div>
-          <h1>Painel de Gemba <span style="color:#cfe0f2">AM</span></h1>
+          <h1>Painel de Gemba <span class="brand-am">AM</span></h1>
           <p class="subtitle">Manutenção Autônoma — auditorias de condutor por SIS</p>
         </div>
       </div>
       <div class="topbar-meta">
         <span class="meta-pill" id="lastUpdated">carregando…</span>
-        <button class="btn btn-ghost" id="toggleImport">Atualizar dados</button>
+        <button class="btn btn-outline" id="toggleImport">Atualizar dados</button>
       </div>
     </div>
   </header>
@@ -624,6 +881,7 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
       <div class="view-tabs" role="tablist" aria-label="Visões do painel">
         <button class="view-tab active" id="tabFreq" type="button" role="tab" aria-selected="true" aria-controls="viewFreq">Frequência</button>
         <button class="view-tab" id="tabQual" type="button" role="tab" aria-selected="false" aria-controls="viewQual">Qualidade</button>
+        <button class="view-tab" id="tabSaude" type="button" role="tab" aria-selected="false" aria-controls="viewSaude">Saúde dos dados<span class="tab-selo" id="seloSaude" hidden></span></button>
       </div>
       <div id="viewFreq" role="tabpanel" aria-labelledby="tabFreq">
       <div class="panel">
@@ -672,7 +930,20 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
       </div>
       </div>
 
-      <div id="viewQual" hidden>
+      <div id="viewSaude" hidden role="tabpanel" aria-labelledby="tabSaude">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Dá para confiar nestes números?</div>
+              <div class="panel-sub">Verificações automáticas sobre o recorte selecionado — matrícula inexistente, autoauditoria, tempo implausível, local contraditório</div>
+            </div>
+            <span class="tag" id="saudeResumo">—</span>
+          </div>
+          <div id="saudeLista"></div>
+        </div>
+      </div>
+
+      <div id="viewQual" hidden role="tabpanel" aria-labelledby="tabQual">
         <div class="panel">
           <div class="panel-head">
             <div>
@@ -775,7 +1046,7 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
     </div>
   </section>
 
-  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS</footer>
+  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS<br><span class="build-stamp">versão 18/09/2026 23:02</span></footer>
 </div>
 
 <div class="viz-tooltip" id="tooltip"></div>
@@ -783,7 +1054,7 @@ footer.foot { text-align: center; color: var(--text-muted); font-size: 11px; mar
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const EMPLOYEES_SEED = [{"matricula": "105176", "nome": "ADRIANO LUIS CORREIA", "turno": "2º TURNO FIXO"}, {"matricula": "110970", "nome": "ALAN MATHEUS DO NASCIMENTO DA PAZ", "turno": "3º TURNO FIXO"}, {"matricula": "123359", "nome": "ALDEMIR FELIX", "turno": "4X3 DIURNO"}, {"matricula": "101827", "nome": "ALEX BELARMINO DOS SANTOS", "turno": "1º TURNO FIXO"}, {"matricula": "132568", "nome": "ALFREDO HENRIQUE DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "92246", "nome": "ALLAN CRUZ DOS SANTOS", "turno": "TL"}, {"matricula": "127121", "nome": "ANA CLAUDIA FERNANDES DOS SANTOS", "turno": "4X3 DIURNO"}, {"matricula": "105858", "nome": "ANDERSON ALVES SILVA CAVALCANTI", "turno": "3º TURNO FIXO"}, {"matricula": "97984", "nome": "ANDERSON SOUZA DO NASCIMENTO", "turno": "TL"}, {"matricula": "110953", "nome": "ANDREW ELVYS DA SILVA BARROS", "turno": "3º TURNO FIXO"}, {"matricula": "101851", "nome": "ANTONIO MARQUES DE OLIVEIRA", "turno": "1º TURNO FIXO"}, {"matricula": "102227", "nome": "ARISTIDES CANDIDO DA SILVA NETO", "turno": "4X3 DIURNO"}, {"matricula": "92598", "nome": "BRUNO PAULO DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "103630", "nome": "CARLOS ALBERTO FERREIRA DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "97519", "nome": "CRISNILSON JOAO SIMOES DE ARAUJO", "turno": "1º TURNO FIXO"}, {"matricula": "116080", "nome": "CRISTIAN CARLOS ARAUJO DE LIMA", "turno": "2º TURNO FIXO"}, {"matricula": "100543", "nome": "DANIEL JOSE DA SILVA", "turno": "TL"}, {"matricula": "115134", "nome": "DANIEL VICTOR", "turno": "4X3 DIURNO"}, {"matricula": "92965", "nome": "DEBSON ALVES BATISTA", "turno": "2º TURNO FIXO"}, {"matricula": "133089", "nome": "DEIVISSON ANIZIO ALVES DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "102242", "nome": "DIEGO SANTANA RAMOS DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "115216", "nome": "DIOGO SANTANA SANTOS", "turno": "2º TURNO FIXO"}, {"matricula": "138947", "nome": "EDILSON MENEZES GUIMARAES", "turno": "TL"}, {"matricula": "105466", "nome": "EDNALDO BEZERRA DO NASCIMENTO JUNIOR", "turno": "2º TURNO FIXO"}, {"matricula": "104489", "nome": "EDUARDO RODRIGUES DE SOUSA", "turno": "3º TURNO FIXO"}, {"matricula": "100545", "nome": "EMERSON BASILIO DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "124973", "nome": "ERIC FERREIRA DE ARAUJO", "turno": "4X3 DIURNO"}, {"matricula": "101903", "nome": "ESDRAS SILVA MARINHO DE ANDRADE", "turno": "3º TURNO FIXO"}, {"matricula": "116004", "nome": "ESTHER DA SILVA SIQUEIRA", "turno": "3º TURNO FIXO"}, {"matricula": "93540", "nome": "EVANDRO JOAQUIM DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "99277", "nome": "EVERTON ELIAN FELIX DE OLIVEIRA", "turno": "3º TURNO FIXO"}, {"matricula": "110049", "nome": "FABIANA SILVEIRA DE SOUZA ARAUJO", "turno": "1º TURNO FIXO"}, {"matricula": "115141", "nome": "FABIO ALEXANDRE DA ROCHA JUNIOR", "turno": "2º TURNO FIXO"}, {"matricula": "105085", "nome": "FABIO FRANCA DE OLIVEIRA", "turno": "2º TURNO FIXO"}, {"matricula": "111038", "nome": "FELIPE AUGUSTO DO NASCIMENTO", "turno": "4X3 DIURNO"}, {"matricula": "101763", "nome": "FELIPE MATIAS DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "111106", "nome": "FERNANDA SOARES DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "114859", "nome": "FERNANDA TAVARES DO NASCIMENTO", "turno": "2º TURNO FIXO"}, {"matricula": "114861", "nome": "FLAVIO ANTONIO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "103723", "nome": "GABRIEL LUIZ DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "115093", "nome": "GRASIELA COSTA DOS SANTOS", "turno": "4X3 DIURNO"}, {"matricula": "103635", "nome": "IRIS ALVES DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "104420", "nome": "JACKSON ALVES DE FREITAS", "turno": "4X3 DIURNO"}, {"matricula": "105186", "nome": "JAKSON CARLOS CORREIA PAIVA", "turno": "2º TURNO FIXO"}, {"matricula": "116290", "nome": "JALYSON TAVARES DA CUNHA", "turno": "3º TURNO FIXO"}, {"matricula": "102141", "nome": "JAMESSON DOS SANTOS ALVES", "turno": "3º TURNO FIXO"}, {"matricula": "115154", "nome": "JANAINA REGINA", "turno": "4X3 DIURNO"}, {"matricula": "101859", "nome": "JOAO HENRIQUE BARROS DOS SANTOS", "turno": "3º TURNO FIXO"}, {"matricula": "105097", "nome": "JOAO PEDRO DE SOUZA OLIVEIRA", "turno": "3º TURNO FIXO"}, {"matricula": "105449", "nome": "JOAO VICTOR DO NASCIMENTO BARBOSA", "turno": "1º TURNO FIXO"}, {"matricula": "103651", "nome": "JOAO WILSON FERREIRA CHAVES JUNIOR", "turno": "2º TURNO FIXO"}, {"matricula": "106619", "nome": "JOELSON DA LUZ SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "98381", "nome": "JONATAN DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "105884", "nome": "JORGE BARRETO CORREIA", "turno": "4X3 DIURNO"}, {"matricula": "98568", "nome": "JOSE EVERSON JOVINIANO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "101770", "nome": "JOSE FELIPE ESPINOLA DE SOUZA", "turno": "4X3 DIURNO"}, {"matricula": "101891", "nome": "JOSE FERREIRA DA SILVA FILHO", "turno": "1º TURNO FIXO"}, {"matricula": "119166", "nome": "JOSE GILMAR SILVA JUNIOR", "turno": "3º TURNO FIXO"}, {"matricula": "100814", "nome": "JOSE MARCILIO DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "99009", "nome": "JOSELITO DA SILVA PONCIANO", "turno": "3º TURNO FIXO"}, {"matricula": "120652", "nome": "JOSIAS DE ASSIS", "turno": "4X3 DIURNO"}, {"matricula": "105481", "nome": "JOSUEL JOSE SAMPAIO", "turno": "1º TURNO FIXO"}, {"matricula": "102235", "nome": "JULIANO EDMILSON DE FREITAS SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "120188", "nome": "KARINA BEATRIZ VENCESLAU GOUVEIA", "turno": "1º TURNO FIXO"}, {"matricula": "111043", "nome": "KAUE EUFRASIO DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "108512", "nome": "LEONAN MARINHO DE ANDRADE", "turno": "2º TURNO FIXO"}, {"matricula": "120184", "nome": "LEONARDA ALMEIDA DOS SANTOS CARNEIRO", "turno": "2º TURNO FIXO"}, {"matricula": "103686", "nome": "LIDIANE MARIA DE LIRA ROCHA", "turno": "2º TURNO FIXO"}, {"matricula": "98397", "nome": "LUCAS OLIVEIRA DA SILVA", "turno": "TL"}, {"matricula": "104468", "nome": "LUIZ HENRIQUE LEMOS CARNEIRO", "turno": "TL"}, {"matricula": "101840", "nome": "MARCELO SOARES FEREIRA", "turno": "2º TURNO FIXO"}, {"matricula": "98499", "nome": "MARCOS ANTONIO DOS SANTOS SOUZA", "turno": "2º TURNO FIXO"}, {"matricula": "97219", "nome": "MARCOS AURELIO DA SILVA MAURICIO", "turno": "4X3 DIURNO"}, {"matricula": "104363", "nome": "MARILIA DUARTE DA COSTA", "turno": "1º TURNO FIXO"}, {"matricula": "106611", "nome": "MATEUS TALISSON OLIVEIRA DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "135003", "nome": "MATHEUS PEREIRA GOMES DOS SANTOS", "turno": "TL"}, {"matricula": "129647", "nome": "MATHEUS VALENTINO DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "105329", "nome": "MAURO DOS MONTES DE MENDONCA FILHO", "turno": "3º TURNO FIXO"}, {"matricula": "138941", "nome": "MAVISON VIANA DOS SANTOS", "turno": "TL"}, {"matricula": "108522", "nome": "NELSON FRANSICO GUEDES JUNIOR", "turno": "1º TURNO FIXO"}, {"matricula": "101606", "nome": "OTONIEL TOMÉ", "turno": "4X3 DIURNO"}, {"matricula": "111119", "nome": "PEDRO HENRIQUE DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "102526", "nome": "PEDRO HENRIQUE DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "93815", "nome": "PEDRO VIDAL MENDES", "turno": "1º TURNO FIXO"}, {"matricula": "99105", "nome": "RAFAEL ANTONIO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "124570", "nome": "RAFAELI MACEDO DE SOUZA", "turno": "4X3 DIURNO"}, {"matricula": "93950", "nome": "RENAN LUIZ DE OLIVEIRA SANTANA", "turno": "1º TURNO FIXO"}, {"matricula": "116289", "nome": "RENATA MAX MOURA", "turno": "2º TURNO FIXO"}, {"matricula": "100845", "nome": "ROGERIO MONTE DE LIMA DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "101908", "nome": "RONALDO DA SILVA VENCESLAU", "turno": "2º TURNO FIXO"}, {"matricula": "101912", "nome": "RONALDO JOAQUIM DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "108716", "nome": "RUBENS GABRIEL GUIMARAES DOS SANTOS", "turno": "2º TURNO FIXO"}, {"matricula": "105909", "nome": "SAMUEL MENDONCA DA CRUZ", "turno": "3º TURNO FIXO"}, {"matricula": "105910", "nome": "SAULO SEVERINO LIRA GALDINO", "turno": "1º TURNO FIXO"}, {"matricula": "108506", "nome": "SAVIO CUNHA MACEDO DA SILVA", "turno": "4X3 DIURNO"}, {"matricula": "106625", "nome": "SEVERINO RAMOS DE LIMA FILHO", "turno": "1º TURNO FIXO"}, {"matricula": "102638", "nome": "TARCISIO DO NASCIMENTO SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "117379", "nome": "TATIANE ROCHA DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "116292", "nome": "THACIO LOPES DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "123375", "nome": "THIAGO DA SILVA GRANJEIRO", "turno": "4X3 DIURNO"}, {"matricula": "119829", "nome": "THIFANNY PALOMA FERREIRA DA CRUZ LIMA", "turno": "4X3 DIURNO"}, {"matricula": "92272", "nome": "UELISON MADEIRA DA SILVA", "turno": "1º TURNO FIXO"}, {"matricula": "115930", "nome": "VALDEILSON AMARO DA SILVA", "turno": "2º TURNO FIXO"}, {"matricula": "107383", "nome": "VALDIR FALCAO DE ARAUJO", "turno": "1º TURNO FIXO"}, {"matricula": "115908", "nome": "VANESSA MARIA DA SILVA FREITAS", "turno": "1º TURNO FIXO"}, {"matricula": "108525", "nome": "VANUZA MARGARIDA DA CRUZ", "turno": "1º TURNO FIXO"}, {"matricula": "106994", "nome": "VINICIUS LUIZ RABELO DE MELO", "turno": "4X3 DIURNO"}, {"matricula": "132228", "nome": "VITÓRIA LAYS COUTINHO DO BONFIM", "turno": "4X3 DIURNO"}, {"matricula": "99690", "nome": "WELDESON SANTOS DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "105914", "nome": "WELLINGTON ARRUDA DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "116287", "nome": "WILIANA MARIA DA SILVA", "turno": "3º TURNO FIXO"}, {"matricula": "98198", "nome": "WILLIAM RAMON DE SANTANA ASSUNCAO", "turno": "1º TURNO FIXO"}];
-const RECORDS_SEED = [{"id":"1","ts":"2026-03-21T14:45:24","auditorMatricula":"98397","auditadoMatricula":"98198","oficina":"FUNILARIA","ute":"UTE 1A","linha":"PPA","operacao":"40","maquina":"MESA GEOMÉTRICA","ciclo":"CI051","ratings":{"1":"Ruim","2":"Péssimo","3":"Regular","4":"Ruim","5":"Ruim","6":"Ruim","7":"Péssimo","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Ruim","12":"Péssimo","13":"Ruim","14":"Ruim","15":"Ruim","16":"Ruim","17":"Ruim","18":"Ruim","19":"Ruim","20":"Péssimo","21":"Regular"}},{"id":"2","ts":"2026-05-15T12:06:01","auditorMatricula":"97582","auditadoMatricula":"111119","oficina":"FUNILARIA","ute":"UTE 1B","linha":"SCE","operacao":"40","maquina":"40R01","ciclo":"CI051","ratings":{"1":"Regular","2":"Ruim","3":"Bom","4":"Bom","5":"Regular","6":"Bom","7":"Regular","8":"Regular","9":"Bom","10":"Bom","11":"Regular","12":"Bom","13":"Péssimo","14":"Péssimo","15":"Ruim","16":"Ruim","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Regular"}},{"id":"3","ts":"2026-05-15T14:37:44","auditorMatricula":"135003","auditadoMatricula":"98568","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUC","operacao":"40","maquina":"Mesa geometrica","ciclo":"Ci114","ratings":{"1":"Regular","2":"Péssimo","3":"Bom","4":"Bom","5":"Bom","6":"Bom","7":"Regular","8":"Regular","9":"Péssimo","10":"Péssimo","11":"Ruim","12":"Bom","13":"Bom","14":"Bom","15":"Bom","16":"Ruim","17":"Bom","18":"Bom","19":"Bom","20":"Bom","21":"Regular"}},{"id":"4","ts":"2026-05-15T17:05:46","auditorMatricula":"98397","auditadoMatricula":"102227","oficina":"FUNILARIA","ute":"UTE 2","linha":"PPP","operacao":"20","maquina":"20R01","ciclo":"CI051","ratings":{"1":"Regular","2":"Regular","3":"Péssimo","4":"Ruim","5":"Ruim","6":"Regular","7":"Péssimo","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Péssimo","13":"Bom","14":"Bom","15":"Bom","16":"Bom","17":"Ruim","18":"Péssimo","19":"Péssimo","20":"Péssimo","21":"Ruim"}},{"id":"5","ts":"2026-05-20T12:50:24","auditorMatricula":"98397","auditadoMatricula":"110049","oficina":"FUNILARIA","ute":"UTE 2","linha":"PPCS","operacao":"85","maquina":"Robô 85R01","ciclo":"CI050","ratings":{"1":"Ruim","2":"Péssimo","3":"Ruim","4":"Ruim","5":"Péssimo","6":"Regular","7":"Ruim","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Péssimo","13":"Bom","14":"Bom","15":"Péssimo","16":"Péssimo","17":"Ruim","18":"Ruim","19":"Péssimo","20":"Péssimo","21":"Regular"}},{"id":"6","ts":"2026-07-27T14:35:06","auditorMatricula":"104468","auditadoMatricula":"93815","oficina":"FUNILARIA","ute":"UTE 1B","linha":"SCE","operacao":"100","maquina":"100r9","ciclo":"CI022/I010","ratings":{"1":"Regular","2":"Péssimo","3":"Bom","4":"Regular","5":"Bom","6":"Bom","7":"Ruim","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Ruim","13":"Péssimo","14":"Regular","15":"Regular","16":"Bom","17":"Bom","18":"Bom","19":"Regular","20":"Bom","21":"Ruim"}},{"id":"7","ts":"2026-07-27T15:03:24","auditorMatricula":"135003","auditadoMatricula":"132568","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUC","operacao":"70","maquina":"70r07","ciclo":"CI051 / IR001","ratings":{"1":"Ruim","2":"Ruim","3":"Ruim","4":"Regular","5":"Regular","6":"Ruim","7":"Ruim","8":"Péssimo","9":"Bom","10":"Péssimo","11":"Péssimo","12":"Ruim","13":"Bom","14":"Regular","15":"Regular","16":"Bom","17":"Bom","18":"Bom","19":"Regular","20":"Regular","21":"Ruim"}},{"id":"8","ts":"2026-09-03T10:41:47","auditorMatricula":"89486","auditadoMatricula":"89486","oficina":"MONTAGEM","ute":"UTE 1B","linha":"FDA","operacao":"10","maquina":"10r01","ciclo":"ci001","ratings":{"1":"Péssimo","2":"Péssimo","3":"Péssimo","4":"Péssimo","5":"Ruim","6":"Ruim","7":"Ruim","8":"Ruim","9":"Péssimo","10":"Ruim","11":"Regular","12":"Ruim","13":"Ruim","14":"Regular","15":"Regular","16":"Regular","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Ruim"}},{"id":"9","ts":"2026-09-03T10:43:20","auditorMatricula":"89486","auditadoMatricula":"89486","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUE","operacao":"10","maquina":"10r01","ciclo":"ci001","ratings":{"1":"Péssimo","2":"Péssimo","3":"Péssimo","4":"Ruim","5":"Ruim","6":"Ruim","7":"Péssimo","8":"Ruim","9":"Péssimo","10":"Ruim","11":"Ruim","12":"Ruim","13":"Ruim","14":"Ruim","15":"Ruim","16":"Ruim","17":"Ruim","18":"Ruim","19":"Ruim","20":"Ruim","21":"Péssimo"}},{"id":"10","ts":"2026-09-04T14:35:54","auditorMatricula":"92246","auditadoMatricula":"117379","oficina":"FUNILARIA","ute":"UTE 2","linha":"PRD","operacao":"20","maquina":"mesa geométrica","ciclo":"CI100","ratings":{"1":"Regular","2":"Péssimo","3":"Bom","4":"Ruim","5":"Regular","6":"Ruim","7":"Regular","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Ruim","13":"Péssimo","14":"Péssimo","15":"Péssimo","16":"Péssimo","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Ruim"}}];
+const RECORDS_SEED = [{"id":"1","ts":"2026-03-21T14:45:24","tsPreenchimento":"2026-03-21T14:45:24","tsConclusao":"2026-03-21T14:49:42","auditorMatricula":"98397","auditadoMatricula":"98198","oficina":"FUNILARIA","ute":"UTE 1A","linha":"PPA","operacao":"40","maquina":"MESA GEOMÉTRICA","ciclo":"CI051","ratings":{"1":"Ruim","2":"Péssimo","3":"Regular","4":"Ruim","5":"Ruim","6":"Ruim","7":"Péssimo","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Ruim","12":"Péssimo","13":"Ruim","14":"Ruim","15":"Ruim","16":"Ruim","17":"Ruim","18":"Ruim","19":"Ruim","20":"Péssimo","21":"Regular"}},{"id":"2","ts":"2026-05-15T12:06:01","tsPreenchimento":"2026-05-15T12:06:01","tsConclusao":"2026-05-15T12:09:58","auditorMatricula":"97582","auditadoMatricula":"111119","oficina":"FUNILARIA","ute":"UTE 1B","linha":"SCE","operacao":"40","maquina":"40R01","ciclo":"CI051","ratings":{"1":"Regular","2":"Ruim","3":"Bom","4":"Bom","5":"Regular","6":"Bom","7":"Regular","8":"Regular","9":"Bom","10":"Bom","11":"Regular","12":"Bom","13":"Péssimo","14":"Péssimo","15":"Ruim","16":"Ruim","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Regular"}},{"id":"3","ts":"2026-05-15T14:37:44","tsPreenchimento":"2026-05-15T14:37:44","tsConclusao":"2026-05-15T15:07:00","auditorMatricula":"135003","auditadoMatricula":"98568","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUC","operacao":"40","maquina":"Mesa geometrica","ciclo":"Ci114","ratings":{"1":"Regular","2":"Péssimo","3":"Bom","4":"Bom","5":"Bom","6":"Bom","7":"Regular","8":"Regular","9":"Péssimo","10":"Péssimo","11":"Ruim","12":"Bom","13":"Bom","14":"Bom","15":"Bom","16":"Ruim","17":"Bom","18":"Bom","19":"Bom","20":"Bom","21":"Regular"}},{"id":"4","ts":"2026-05-15T17:05:46","tsPreenchimento":"2026-05-15T17:05:46","tsConclusao":"2026-05-15T17:23:57","auditorMatricula":"98397","auditadoMatricula":"102227","oficina":"FUNILARIA","ute":"UTE 2","linha":"PPP","operacao":"20","maquina":"20R01","ciclo":"CI051","ratings":{"1":"Regular","2":"Regular","3":"Péssimo","4":"Ruim","5":"Ruim","6":"Regular","7":"Péssimo","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Péssimo","13":"Bom","14":"Bom","15":"Bom","16":"Bom","17":"Ruim","18":"Péssimo","19":"Péssimo","20":"Péssimo","21":"Ruim"}},{"id":"5","ts":"2026-05-20T12:50:24","tsPreenchimento":"2026-05-20T12:50:24","tsConclusao":"2026-05-20T13:00:27","auditorMatricula":"98397","auditadoMatricula":"110049","oficina":"FUNILARIA","ute":"UTE 2","linha":"PPCS","operacao":"85","maquina":"Robô 85R01","ciclo":"CI050","ratings":{"1":"Ruim","2":"Péssimo","3":"Ruim","4":"Ruim","5":"Péssimo","6":"Regular","7":"Ruim","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Péssimo","13":"Bom","14":"Bom","15":"Péssimo","16":"Péssimo","17":"Ruim","18":"Ruim","19":"Péssimo","20":"Péssimo","21":"Regular"}},{"id":"6","ts":"2026-07-27T14:35:06","tsPreenchimento":"2026-07-27T14:35:06","tsConclusao":"2026-07-27T14:46:50","auditorMatricula":"104468","auditadoMatricula":"93815","oficina":"FUNILARIA","ute":"UTE 1B","linha":"SCE","operacao":"100","maquina":"100r9","ciclo":"CI022/I010","ratings":{"1":"Regular","2":"Péssimo","3":"Bom","4":"Regular","5":"Bom","6":"Bom","7":"Ruim","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Ruim","13":"Péssimo","14":"Regular","15":"Regular","16":"Bom","17":"Bom","18":"Bom","19":"Regular","20":"Bom","21":"Ruim"}},{"id":"7","ts":"2026-07-27T15:03:24","tsPreenchimento":"2026-07-27T15:03:24","tsConclusao":"2026-07-27T15:26:57","auditorMatricula":"135003","auditadoMatricula":"132568","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUC","operacao":"70","maquina":"70r07","ciclo":"CI051 / IR001","ratings":{"1":"Ruim","2":"Ruim","3":"Ruim","4":"Regular","5":"Regular","6":"Ruim","7":"Ruim","8":"Péssimo","9":"Bom","10":"Péssimo","11":"Péssimo","12":"Ruim","13":"Bom","14":"Regular","15":"Regular","16":"Bom","17":"Bom","18":"Bom","19":"Regular","20":"Regular","21":"Ruim"}},{"id":"8","ts":"2026-09-03T10:41:47","tsPreenchimento":"2026-09-03T10:41:47","tsConclusao":"2026-09-03T10:43:02","auditorMatricula":"89486","auditadoMatricula":"89486","oficina":"MONTAGEM","ute":"UTE 1B","linha":"FDA","operacao":"10","maquina":"10r01","ciclo":"ci001","ratings":{"1":"Péssimo","2":"Péssimo","3":"Péssimo","4":"Péssimo","5":"Ruim","6":"Ruim","7":"Ruim","8":"Ruim","9":"Péssimo","10":"Ruim","11":"Regular","12":"Ruim","13":"Ruim","14":"Regular","15":"Regular","16":"Regular","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Ruim"}},{"id":"9","ts":"2026-09-03T10:43:20","tsPreenchimento":"2026-09-03T10:43:20","tsConclusao":"2026-09-03T10:44:34","auditorMatricula":"89486","auditadoMatricula":"89486","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUE","operacao":"10","maquina":"10r01","ciclo":"ci001","ratings":{"1":"Péssimo","2":"Péssimo","3":"Péssimo","4":"Ruim","5":"Ruim","6":"Ruim","7":"Péssimo","8":"Ruim","9":"Péssimo","10":"Ruim","11":"Ruim","12":"Ruim","13":"Ruim","14":"Ruim","15":"Ruim","16":"Ruim","17":"Ruim","18":"Ruim","19":"Ruim","20":"Ruim","21":"Péssimo"}},{"id":"10","ts":"2026-09-04T14:35:54","tsPreenchimento":"2026-09-04T14:35:54","tsConclusao":"2026-09-04T15:43:41","auditorMatricula":"92246","auditadoMatricula":"117379","oficina":"FUNILARIA","ute":"UTE 2","linha":"PRD","operacao":"20","maquina":"mesa geométrica","ciclo":"CI100","ratings":{"1":"Regular","2":"Péssimo","3":"Bom","4":"Ruim","5":"Regular","6":"Ruim","7":"Regular","8":"Péssimo","9":"Péssimo","10":"Péssimo","11":"Péssimo","12":"Ruim","13":"Péssimo","14":"Péssimo","15":"Péssimo","16":"Péssimo","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Ruim"}},{"id":"11","ts":"2026-09-09T13:14:37","tsPreenchimento":"2026-09-09T13:14:37","tsConclusao":"2026-09-09T13:46:02","auditorMatricula":"92246","auditadoMatricula":"110049","oficina":"FUNILARIA","ute":"UTE 2","linha":"PPCS","operacao":"110","maquina":"grafagem","ciclo":"C003;IR005;I036","ratings":{"1":"Ruim","2":"Péssimo","3":"Péssimo","4":"Regular","5":"Regular","6":"Regular","7":"Regular","8":"Péssimo","9":"Péssimo","10":"Ruim","11":"Péssimo","12":"Ruim","13":"Regular","14":"Regular","15":"Regular","16":"Bom","17":"Bom","18":"Bom","19":"Bom","20":"Bom","21":"Ruim"}},{"id":"12","ts":"2026-09-10T00:20:01","tsPreenchimento":"2026-09-10T00:20:01","tsConclusao":"2026-09-09T00:32:28","auditorMatricula":"97984","auditadoMatricula":"98499","oficina":"FUNILARIA","ute":"UTE 1A","linha":"AUC","operacao":"90","maquina":"Bico da pistola de adesivo","ciclo":"CI073","ratings":{"1":"Regular","2":"Regular","3":"Bom","4":"Bom","5":"Bom","6":"Bom","7":"Regular","8":"Regular","9":"Bom","10":"Bom","11":"Bom","12":"Bom","13":"Bom","14":"Bom","15":"Regular","16":"Regular","17":"Bom","18":"Bom","19":"Regular","20":"Regular","21":"Regular"}},{"id":"13","ts":"2026-09-10T00:48:06","tsPreenchimento":"2026-09-10T00:48:06","tsConclusao":"2026-09-09T00:56:11","auditorMatricula":"138941","auditadoMatricula":"115216","oficina":"FUNILARIA","ute":"UTE 1B","linha":"SPG","operacao":"20","maquina":"Mesa de solda","ciclo":"CI050","ratings":{"1":"Ruim","2":"Regular","3":"Bom","4":"Regular","5":"Regular","6":"Regular","7":"Ruim","8":"Ruim","9":"Péssimo","10":"Regular","11":"Ruim","12":"Regular","13":"Ruim","14":"Ruim","15":"Regular","16":"Ruim","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Regular"}},{"id":"14","ts":"2026-09-09T23:16:20","tsPreenchimento":"2026-09-10T23:16:20","tsConclusao":"2026-09-09T23:22:51","auditorMatricula":"138941","auditadoMatricula":"92965","oficina":"FUNILARIA","ute":"UTE 1B","linha":"SCE","operacao":"70","maquina":"robô 70R9","ciclo":"CI051","ratings":{"1":"Bom","2":"Bom","3":"Bom","4":"Regular","5":"Bom","6":"Bom","7":"Regular","8":"Bom","9":"Bom","10":"Regular","11":"Regular","12":"Regular","13":"Bom","14":"Bom","15":"Bom","16":"Bom","17":"Bom","18":"Bom","19":"Bom","20":"Bom","21":"Regular"}},{"id":"15","ts":"2026-09-10T23:22:55","tsPreenchimento":"2026-09-10T23:22:55","tsConclusao":"2026-09-10T23:31:29","auditorMatricula":"138941","auditadoMatricula":"102638","oficina":"FUNILARIA","ute":"UTE 1B","linha":"FDA","operacao":"70","maquina":"70R04","ciclo":"CI051","ratings":{"1":"Regular","2":"Regular","3":"Bom","4":"Bom","5":"Regular","6":"Bom","7":"Regular","8":"Regular","9":"Bom","10":"Bom","11":"Regular","12":"Bom","13":"Bom","14":"Bom","15":"Ruim","16":"Ruim","17":"Bom","18":"Bom","19":"Bom","20":"Regular","21":"Regular"}},{"id":"16","ts":"2026-09-10T23:38:37","tsPreenchimento":"2026-09-10T23:38:37","tsConclusao":"2026-09-10T23:51:47","auditorMatricula":"97984","auditadoMatricula":"103635","oficina":"FUNILARIA","ute":"UTE 1A","linha":"TEA","operacao":"50","maquina":"PISTOLA TUCKER","ciclo":"CI030","ratings":{"1":"Bom","2":"Bom","3":"Bom","4":"Bom","5":"Bom","6":"Bom","7":"Bom","8":"Bom","9":"Bom","10":"Bom","11":"Bom","12":"Bom","13":"Bom","14":"Bom","15":"Regular","16":"Regular","17":"Regular","18":"Regular","19":"Regular","20":"Regular","21":"Ruim"}},{"id":"17","ts":"2026-09-11T04:37:10","tsPreenchimento":"2026-09-11T04:37:10","tsConclusao":"2026-09-11T04:42:28","auditorMatricula":"100543","auditadoMatricula":"116004","oficina":"FUNILARIA","ute":"UTE 1A","linha":"SPJ","operacao":"10","maquina":"10r01 robô de pinça","ciclo":"CI051","ratings":{"1":"Bom","2":"Bom","3":"Bom","4":"Bom","5":"Regular","6":"Regular","7":"Ruim","8":"Ruim","9":"Bom","10":"Ruim","11":"Ruim","12":"Regular","13":"Regular","14":"Regular","15":"Regular","16":"Regular","17":"Bom","18":"Ruim","19":"Bom","20":"Bom","21":"Regular"}}];
 const RATING_META_SEED = [{"n":1,"bloco":"5S","label":"5S DA LINHA"},{"n":2,"bloco":"TOTEM DO CONDUTOR","label":"TOTEM DO CONDUTOR ATUALIZADO"},{"n":3,"bloco":"TABELÃO DE AM","label":"TABELÃO DE AM ATUALIZADO"},{"n":4,"bloco":"TABELÃO DE AM","label":"DISTRIBUIÇÃO DO TEMPO NO TABELÃO"},{"n":5,"bloco":"CICLOS DE AM","label":"CICLOS DE AM REALIZADOS CORRETAMENTE"},{"n":6,"bloco":"CICLOS DE AM","label":"FALTA CICLO DE AM PARA ALGUM EQUIPAMENTO"},{"n":7,"bloco":"FONTE DE SUJEIRA OU DIFÍCIL ACESSO","label":"FONTE DE SUJEIRA OU DIFÍCIL ACESSO"},{"n":8,"bloco":"FONTE DE SUJEIRA OU DIFÍCIL ACESSO","label":"GRÁFICO DE FONTES DE SUJEIRA E DIFÍCIL ACESSO ATUALIZADO"},{"n":9,"bloco":"FONTE DE SUJEIRA OU DIFÍCIL ACESSO","label":"AÇÕES PROVISÓRIAS REALIZADAS"},{"n":10,"bloco":"FONTE DE SUJEIRA OU DIFÍCIL ACESSO","label":"PENDÊNCIAS NO KAIZEN JOURNAL"},{"n":11,"bloco":"FONTE DE SUJEIRA OU DIFÍCIL ACESSO","label":"FONTES MAPEADAS COM AÇÕES CADASTRAS. (CICLOS PROVISÓRIOS, CICLOS AM, KAIZENS)"},{"n":12,"bloco":"CARTÃO AM/PM","label":"ANOMALIA SEM CARTÃO AM/PM"},{"n":13,"bloco":"CARTÃO AM/PM","label":"CARTÕES AM/PM VENCIDOS"},{"n":14,"bloco":"CARTÃO AM/PM","label":"CARTÕES COM JUSTIFICATIVA E PRAZO"},{"n":15,"bloco":"FERRAMENTAS","label":"5S CARRINHO"},{"n":16,"bloco":"FERRAMENTAS","label":"CONDIÇÃO DAS FERRAMENTAS"},{"n":17,"bloco":"MICROPARADAS","label":"CONDUTOR CONHECE MICROPARADAS"},{"n":18,"bloco":"MICROPARADAS","label":"FLIPCHART/POSTO ROLHA ATUALIZADO"},{"n":19,"bloco":"MICROPARADAS","label":"MICROPARADA SEM AÇÃO"},{"n":20,"bloco":"MICROPARADAS","label":"MICROPARADA SEM AÇÃO"},{"n":21,"bloco":"JPH","label":"CONDUTOR CONHECE OEE/JPH"}];
 
 const SERIES_VARS = ['--series-1','--series-2','--series-3','--series-4','--series-5','--series-6','--series-7','--series-8'];
@@ -967,7 +1238,7 @@ function renderFilters(facets){
       ${hasActive ? '<button class="clear-link" id="clearFilters">Limpar tudo</button>' : ''}
     </div>
 
-    <div class="filter-step">
+    <div class="filter-step periodo">
       <div class="step-label"><span class="step-num active">1</span>Período</div>
       <div class="pill-list">
         ${presets.map(([key,label]) => `
@@ -1100,7 +1371,7 @@ function podiumColHtml(entry, rank){
   return `
     <div class="podium-col rank-${rank}">
       <div class="podium-badge-row">
-        <div class="podium-avatar" style="background:${color};" title="${escapeHtml(label)} — ${escapeHtml(matricula)}">${escapeHtml(initials(name, matricula))}</div>
+        <div class="podium-avatar" style="background:${color};color:${corDeTextoSobre(color)};" title="${escapeHtml(label)} — ${escapeHtml(matricula)}">${escapeHtml(initials(name, matricula))}</div>
         <div class="podium-medal">${rank}º</div>
       </div>
       <div class="podium-value">${count}</div>
@@ -1175,20 +1446,42 @@ function renderDailyChart(facets){
   byDay.forEach(m => m.forEach((_,k) => auditorsPresent.add(k)));
   const orderedAuditors = Array.from(auditorsPresent).sort((a,b) => (state.auditorColorMap.get(a)??999) - (state.auditorColorMap.get(b)??999));
 
-  // Layout constants (mark spec: bars capped thin; extra room becomes air
-  // between columns, never fatter bars).
+  // Layout (mark spec: bars capped thin; extra room becomes air entre colunas,
+  // nunca barras mais gordas).
+  //
+  // O viewBox acompanha a LARGURA REAL do container, não o número de dias.
+  // Antes era `leftMargin + dias*58 + rightPad`: com 2 dias dava 162 unidades
+  // esticadas para ~1100px pelo width:100%, ou seja, tudo ampliado 6.8x —
+  // barras enormes e texto gigante. Com o viewBox igual ao container a escala
+  // é sempre 1:1 e as colunas sobram como espaço vazio à direita, que é a
+  // leitura correta: "só houve Gemba em 2 dias".
   const leftMargin = 28, rightPad = 18;
-  const barWidth = 20, colSlot = 58; // barWidth + gap between column centers
+  const barWidthMax = 20, colSlotMax = 96, colSlotMin = 34;
   const topPad = 22, plotHeight = 140, axisLabelHeight = 20;
-  const gap = 2; // surface gap between stacked segments
-  const width = leftMargin + days.length * colSlot + rightPad;
+  const gap = 2; // respiro entre segmentos empilhados
+
+  const medido = el.clientWidth || el.parentElement?.clientWidth || 0;
+  const alvo = Math.max(280, Math.min(medido || 760, 1600));
+  const util = Math.max(120, alvo - leftMargin - rightPad);
+  const colSlot = Math.max(colSlotMin, Math.min(colSlotMax, util / days.length));
+  const barWidth = Math.min(barWidthMax, colSlot * 0.55);
+  // se as colunas não couberem, o viewBox cresce e .daily-scroll rola na horizontal
+  const width = Math.max(alvo, leftMargin + days.length * colSlot + rightPad);
+  // com poucos dias o grupo fica centralizado na área do gráfico — encostado
+  // na esquerda com 90% de vazio à direita parece gráfico quebrado
+  const grupoW = days.length * colSlot;
+  const offsetX = leftMargin + Math.max(0, (width - leftMargin - rightPad - grupoW) / 2);
   const height = topPad + plotHeight + axisLabelHeight;
   const baselineY = topPad + plotHeight;
   const midVal = niceMax / 2;
 
   const tooltips = []; // {x,y,w,h or path, text} collected then attached after innerHTML
 
-  let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">`;
+  // nunca ampliar (era isso que inchava as barras com poucos dias); encolher
+  // até 85% para caber na tela do celular e, abaixo disso, rolar na horizontal
+  // em vez de virar letra de 4px.
+  const estilo = `width:${width}px;max-width:100%;min-width:${Math.round(width*0.85)}px`;
+  let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="${estilo}" role="img" aria-label="Auditorias por dia, empilhadas por auditor">`;
 
   // gridlines + y-axis labels (0, mid, max)
   const yFor = v => baselineY - (v/niceMax)*plotHeight;
@@ -1200,7 +1493,7 @@ function renderDailyChart(facets){
   days.forEach((dk, i) => {
     const m = byDay.get(dk);
     const total = dayTotals[i];
-    const cx = leftMargin + i*colSlot + colSlot/2;
+    const cx = offsetX + i*colSlot + colSlot/2;
     const barX = cx - barWidth/2;
     const segAuditors = orderedAuditors.filter(a => m.has(a));
     const n = segAuditors.length;
@@ -1327,6 +1620,7 @@ function updateLastUpdated(){
   const rotulos = {
     nuvem:      ['Dados do banco', 'ok'],
     navegador:  ['Salvo só neste navegador', 'aviso'],
+    semchave:   ['Banco não conectado — falta colar a chave no index.html', 'aviso'],
     base:       ['Dados de exemplo — nada importado ainda', 'aviso'],
     carregando: ['Carregando do banco…', ''],
     erro:       ['Banco fora do ar — mostrando dados locais', 'erro'],
@@ -1344,7 +1638,10 @@ function renderAll(){
   const facets = computeFacets();
   renderKPIs(facets);
   renderFilters(facets);
-  if (state.view === 'qual'){
+  atualizarSeloSaude(facets);
+  if (state.view === 'saude'){
+    renderSaude(facets);
+  } else if (state.view === 'qual'){
     renderQuality(facets);
   } else {
     renderRanking(facets);
@@ -1358,6 +1655,26 @@ function rebuildDerivedAndRender(){
   rebuildIndexes();
   renderAll();
 }
+
+/* O gráfico é desenhado na medida do container, então girar o celular ou
+   redimensionar a janela precisa redesenhar — senão o viewBox fica com a
+   largura antiga e a escala deixa de ser 1:1. Só redesenha quando a largura
+   muda de verdade (>=24px), para não rodar a cada pixel do arraste. */
+(function observarLargura(){
+  let ultima = 0, timer = null;
+  const alvo = () => document.getElementById('dailyChart');
+  const medir = () => { const el = alvo(); return el ? el.clientWidth : 0; };
+  ultima = medir();
+  window.addEventListener('resize', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const agora = medir();
+      if (!agora || Math.abs(agora - ultima) < 24) return;
+      ultima = agora;
+      if (state.view === 'freq') renderDailyChart(computeFacets());
+    }, 160);
+  });
+})();
 
 
 /** Grava o estado inteiro (usado pela restauração de backup). */
@@ -1420,6 +1737,209 @@ async function handleRestore(){
   rebuildDerivedAndRender();
 }
 
+/* ---------- Saúde dos dados ----------
+ * As mesmas verificações da auditoria manual, rodando a cada importação.
+ * A ideia é simples: um número só é útil se dá para confiar nele, e problemas
+ * como matrícula inexistente ou autoauditoria distorcem o ranking inteiro
+ * sem dar nenhum sinal na tela. */
+
+const SEV = { grave: 2, alerta: 1 };
+
+/** Roda todas as verificações sobre o recorte atual e devolve os achados
+ * agrupados por tipo, do mais grave para o mais leve. */
+function verificarSaude(recs){
+  const achados = [];
+  const add = (sev, tipo, titulo, detalhe, ids) =>
+    achados.push({ sev, tipo, titulo, detalhe, ids: ids || [] });
+
+  // --- matrículas que não existem na base de colaboradores ---
+  const semCadastro = new Map();
+  recs.forEach(r => {
+    const m = normMatricula(r.auditorMatricula);
+    if (m && !state.empMap.has(m)){
+      if (!semCadastro.has(m)) semCadastro.set(m, []);
+      semCadastro.get(m).push(r.id);
+    }
+  });
+  semCadastro.forEach((ids, m) => {
+    add('grave', 'matricula', `Auditor ${m} não existe na base`,
+        `${ids.length} auditoria(s) lançadas por uma matrícula que não está entre os ${state.employees.length} colaboradores cadastrados. Elas entram no ranking como se fossem de alguém real.`,
+        ids);
+  });
+
+  const condSemCadastro = new Set();
+  recs.forEach(r => {
+    const m = normMatricula(r.auditadoMatricula);
+    if (m && !state.empMap.has(m)) condSemCadastro.add(m);
+  });
+  if (condSemCadastro.size){
+    add('alerta', 'matricula', `Condutor(es) auditado(s) fora da base`,
+        `Matrícula(s) ${[...condSemCadastro].join(', ')} não estão cadastradas.`);
+  }
+
+  // --- auditor avaliando a si mesmo ---
+  const auto = recs.filter(r => {
+    const a = normMatricula(r.auditorMatricula), b = normMatricula(r.auditadoMatricula);
+    return a && b && a === b;
+  });
+  if (auto.length){
+    add('grave', 'autoauditoria', 'Auditor avaliando a si mesmo',
+        `${auto.length} registro(s) em que quem preencheu e quem foi auditado são a mesma matrícula. Gemba é avaliação de terceiro — isso não é auditoria.`,
+        auto.map(r => r.id));
+  }
+
+  // --- tempo de preenchimento incompatível com o número de itens ---
+  const MIN_SEG_POR_ITEM = 20;
+  const rapidas = [];
+  recs.forEach(r => {
+    if (!r.tsPreenchimento || !r.tsConclusao) return;
+    const seg = (new Date(r.tsConclusao) - new Date(r.tsPreenchimento)) / 1000;
+    const itens = Object.keys(r.ratings || {}).length;
+    if (seg > 0 && itens >= 5 && seg / itens < MIN_SEG_POR_ITEM){
+      rapidas.push({ id: r.id, min: seg / 60, porItem: seg / itens });
+    }
+  });
+  if (rapidas.length){
+    const pior = rapidas.reduce((a, b) => a.porItem < b.porItem ? a : b);
+    add('grave', 'tempo', 'Preenchimento rápido demais para ser inspeção',
+        `${rapidas.length} auditoria(s) com menos de ${MIN_SEG_POR_ITEM}s por item — a mais rápida levou ${pior.min.toFixed(1)} min no total (${pior.porItem.toFixed(0)}s por item). Ir ao posto e olhar cada ponto leva mais que isso.`,
+        rapidas.map(r => r.id));
+  }
+
+  // --- mesma pessoa em locais diferentes em intervalo impossível ---
+  const porAuditor = new Map();
+  recs.forEach(r => {
+    const m = normMatricula(r.auditorMatricula);
+    if (!m || !r.tsPreenchimento) return;
+    if (!porAuditor.has(m)) porAuditor.set(m, []);
+    porAuditor.get(m).push(r);
+  });
+  const teleporte = [];
+  porAuditor.forEach((lista, m) => {
+    lista.sort((a, b) => new Date(a.tsPreenchimento) - new Date(b.tsPreenchimento));
+    for (let i = 1; i < lista.length; i++){
+      const ant = lista[i-1], at = lista[i];
+      const fimAnt = new Date(ant.tsConclusao || ant.tsPreenchimento);
+      const gapMin = (new Date(at.tsPreenchimento) - fimAnt) / 60000;
+      const localMudou = (ant.oficina || '') !== (at.oficina || '') || (ant.ute || '') !== (at.ute || '');
+      if (gapMin >= 0 && gapMin < 5 && localMudou){
+        teleporte.push({ ids: [ant.id, at.id], m, gapMin,
+                         de: `${ant.oficina || '?'}/${ant.ute || '?'}`, para: `${at.oficina || '?'}/${at.ute || '?'}` });
+      }
+    }
+  });
+  teleporte.forEach(t => {
+    add('grave', 'teleporte', 'Troca de local em tempo impossível',
+        `A matrícula ${t.m} terminou uma auditoria em ${t.de} e começou outra em ${t.para} ${t.gapMin < 1 ? 'em menos de 1 minuto' : `em ${t.gapMin.toFixed(0)} minuto(s)`}. Fisicamente não dá.`,
+        t.ids);
+  });
+
+  // --- respostas carimbadas ---
+  const carimbo = [];
+  recs.forEach(r => {
+    const vals = Object.values(r.ratings || {}).filter(v => RATING_PTS[v] !== undefined);
+    if (vals.length < 5) return;
+    const c = countByRating(vals);
+    const maior = Math.max(...Object.values(c));
+    if (maior / vals.length >= 0.85) carimbo.push(r.id);
+  });
+  if (carimbo.length){
+    add('alerta', 'carimbo', 'Respostas pouco discriminadas',
+        `${carimbo.length} auditoria(s) com 85% ou mais das respostas iguais. Pode ser um posto realmente uniforme — ou preenchimento no automático.`,
+        carimbo);
+  }
+
+  // --- mesma máquina em locais conflitantes ---
+  const locais = new Map();
+  recs.forEach(r => {
+    const maq = (r.maquina || '').trim().toUpperCase().replace(/\s+/g, ' ');
+    if (!maq) return;
+    if (!locais.has(maq)) locais.set(maq, new Set());
+    locais.get(maq).add(`${r.oficina || '?'}/${r.ute || '?'}`);
+  });
+  const conflito = [...locais.entries()].filter(([, s]) => s.size > 1);
+  if (conflito.length){
+    add('alerta', 'local', 'Mesma máquina registrada em locais diferentes',
+        conflito.map(([m, s]) => `"${m}" aparece em ${[...s].join(' e ')}`).join('; ')
+        + '. Ou são máquinas homônimas, ou alguém errou a oficina/UTE.');
+  }
+
+  // --- grafias diferentes da mesma máquina ---
+  const grafias = new Map();
+  recs.forEach(r => {
+    const maq = (r.maquina || '').trim();
+    if (!maq) return;
+    const chave = maq.toUpperCase().replace(/\s+/g, '');
+    if (!grafias.has(chave)) grafias.set(chave, new Set());
+    grafias.get(chave).add(maq);
+  });
+  const variantes = [...grafias.values()].filter(s => s.size > 1);
+  if (variantes.length){
+    add('alerta', 'grafia', 'Mesma máquina escrita de formas diferentes',
+        variantes.map(s => [...s].join(' / ')).join('; ')
+        + '. O agrupamento por máquina conta cada grafia como se fosse outro equipamento.');
+  }
+
+  // --- registros sem avaliação ---
+  const semNota = recs.filter(r => !r.ratings || !Object.keys(r.ratings).length);
+  if (semNota.length && semNota.length < recs.length){
+    add('alerta', 'semnota', 'Auditorias sem respostas de avaliação',
+        `${semNota.length} registro(s) contam na frequência mas ficam de fora da nota de qualidade.`,
+        semNota.map(r => r.id));
+  }
+
+  achados.sort((a, b) => SEV[b.sev] - SEV[a.sev]);
+  return achados;
+}
+
+function renderSaude(facets){
+  const el = document.getElementById('saudeLista');
+  const resumo = document.getElementById('saudeResumo');
+  const recs = facets.final;
+  if (!recs.length){
+    el.innerHTML = '<div class="empty-state">Nenhum registro no recorte selecionado.</div>';
+    resumo.textContent = '—';
+    return;
+  }
+  const achados = verificarSaude(recs);
+  const graves = achados.filter(a => a.sev === 'grave').length;
+  const alertas = achados.length - graves;
+
+  resumo.textContent = `${recs.length} registro(s) verificado(s)`;
+
+  if (!achados.length){
+    el.innerHTML = `<div class="saude-limpo">
+        <div class="saude-limpo-icone">✓</div>
+        <div><b>Nenhum problema encontrado</b><div class="saude-limpo-sub">As ${recs.length} auditorias do recorte passaram em todas as verificações.</div></div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="saude-contagem">
+      ${graves ? `<span class="saude-pill grave">${graves} grave${graves > 1 ? 's' : ''}</span>` : ''}
+      ${alertas ? `<span class="saude-pill alerta">${alertas} alerta${alertas > 1 ? 's' : ''}</span>` : ''}
+    </div>` + achados.map(a => `
+      <div class="saude-item ${a.sev}">
+        <div class="saude-item-topo">
+          <span class="saude-tag ${a.sev}">${a.sev === 'grave' ? 'GRAVE' : 'ALERTA'}</span>
+          <b>${escapeHtml(a.titulo)}</b>
+        </div>
+        <div class="saude-detalhe">${escapeHtml(a.detalhe)}</div>
+        ${a.ids.length ? `<div class="saude-ids">Registros: ${a.ids.slice(0, 12).map(i => escapeHtml(String(i))).join(', ')}${a.ids.length > 12 ? ` e mais ${a.ids.length - 12}` : ''}</div>` : ''}
+      </div>`).join('');
+}
+
+/** Selo na aba, para o problema aparecer sem precisar procurar. */
+function atualizarSeloSaude(facets){
+  const selo = document.getElementById('seloSaude');
+  if (!selo) return;
+  const recs = facets.final;
+  const graves = recs.length ? verificarSaude(recs).filter(a => a.sev === 'grave').length : 0;
+  selo.textContent = graves || '';
+  selo.hidden = !graves;
+}
+
 /* ---------- Qualidade: escala, nota e recortes ---------- */
 /* A escala tem 4 níveis ordenados. A cor NUNCA aparece sozinha: emoji e
  * palavra acompanham todo uso, que é o que torna a escala legível também
@@ -1438,6 +1958,31 @@ const FAIXAS = [
 ];
 
 function ratingColor(r){ return `var(${RATING_TOKEN[r] || '--text-muted'})`; }
+/* Como TEXTO a escala precisa de 4.5:1; o âmbar cheio tem 1.97:1 no branco.
+   Por isso cada faixa tem uma variante -fg só para letra. */
+/** Preto ou branco, o que tiver mais contraste sobre `cor` (hex ou rgb).
+ *  As iniciais do pódio ficavam brancas sobre séries claras — 2.58:1. */
+function corDeTextoSobre(cor){
+  const m = String(cor).match(/^#?([0-9a-f]{6})$/i) || String(cor).match(/rgba?\(([^)]+)\)/i);
+  let r, g, b;
+  if (!m) return '#FFFFFF';
+  if (m[1].includes(',')){ [r, g, b] = m[1].split(',').map(v => parseFloat(v)); }
+  else { r = parseInt(m[1].slice(0,2),16); g = parseInt(m[1].slice(2,4),16); b = parseInt(m[1].slice(4,6),16); }
+  const lin = c => { c /= 255; return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+  const L = 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
+  return (L + 0.05) / 0.05 > 1.05 / (L + 0.05) ? '#0A0A0A' : '#FFFFFF';
+}
+
+/** Cor da letra escrita EM CIMA do preenchimento da faixa. */
+function ratingOnColor(r){
+  const t = RATING_TOKEN[r];
+  return t ? `var(${t}-on, #FFFFFF)` : '#FFFFFF';
+}
+
+function ratingTextColor(r){
+  const t = RATING_TOKEN[r];
+  return t ? `var(${t}-fg, var(${t}))` : 'var(--text-muted)';
+}
 
 /** Média das respostas normalizada para 0-100 (Bom=3 ... Péssimo=0). */
 function scorePct(vals){
@@ -1511,6 +2056,7 @@ function renderQualKPIs(facets){
   const score = scorePct(all);
   const faixa = scoreFaixa(score);
   const cor = ratingColor(faixa);
+  const corTexto = ratingTextColor(faixa);
   const c = countByRating(all);
   const pctRuins = (c['Ruim'] + c['Péssimo']) / all.length * 100;
   let piorBloco = '—', piorNota = 101;
@@ -1521,12 +2067,12 @@ function renderQualKPIs(facets){
   el.innerHTML = `
     <div class="kpi-tile">
       <div class="kpi-label">Nota geral</div>
-      <div class="kpi-value" style="color:${cor}">${score.toFixed(0)}</div>
+      <div class="kpi-value" style="color:${corTexto}">${score.toFixed(0)}</div>
       <div class="kpi-caption">de 0 a 100</div>
     </div>
     <div class="kpi-tile">
       <div class="kpi-label">Classificação</div>
-      <div class="kpi-value" style="font-size:24px;color:${cor}">${RATING_EMOJI[faixa]} ${faixa}</div>
+      <div class="kpi-value" style="font-size:24px;color:${corTexto}">${RATING_EMOJI[faixa]} ${faixa}</div>
       <div class="kpi-caption">faixa da nota geral</div>
     </div>
     <div class="kpi-tile">
@@ -1553,6 +2099,7 @@ function renderQualHero(recs){
   const score = scorePct(all);
   const faixa = scoreFaixa(score);
   const cor = ratingColor(faixa);
+  const corTexto = ratingTextColor(faixa);
   baseEl.textContent = `${recs.length} Gemba${recs.length === 1 ? '' : 's'} · ${all.length} respostas`;
 
   // pior bloco, para dar a direção logo no cabeçalho
@@ -1578,12 +2125,12 @@ function renderQualHero(recs){
                   stroke-linecap="round" stroke-dasharray="${preenchido.toFixed(1)} ${(CIRC - preenchido).toFixed(1)}"/>
         </svg>
         <div class="score-dial-center">
-          <div class="score-dial-value" style="color:${cor}">${score.toFixed(0)}</div>
+          <div class="score-dial-value" style="color:${corTexto}">${score.toFixed(0)}</div>
           <div class="score-dial-max">de 100</div>
         </div>
       </div>
       <div class="score-verdict">
-        <span class="score-verdict-badge" style="background:${cor}">${RATING_EMOJI[faixa]} ${faixa}</span>
+        <span class="score-verdict-badge" style="background:${cor};color:${ratingOnColor(faixa)}">${RATING_EMOJI[faixa]} ${faixa}</span>
         <div class="score-verdict-text">
           <b>${pctRuins.toFixed(0)}%</b> das respostas foram Ruim ou Péssimo.
           ${piorBloco ? `O bloco mais crítico é <b>${escapeHtml(piorBloco)}</b>, com nota <b>${piorNota.toFixed(0)}</b>.` : ''}
@@ -1601,7 +2148,7 @@ function renderQualDist(recs){
     const p = c[r] / all.length * 100;
     // o número só entra dentro da barra quando cabe; senão fica no hover e na legenda
     const dentro = p >= 9 ? `${p.toFixed(0)}%` : '';
-    return `<div class="dist-seg" style="width:${p}%;background:${ratingColor(r)}"
+    return `<div class="dist-seg" style="width:${p}%;background:${ratingColor(r)};color:${ratingOnColor(r)}"
                  title="${RATING_EMOJI[r]} ${r}: ${c[r]} de ${all.length} (${p.toFixed(1)}%)">${dentro}</div>`;
   }).join('');
   el.innerHTML = `<div class="dist-bar">${segs}</div>${rateLegend()}`;
@@ -1658,7 +2205,7 @@ function renderQualItems(recs){
     const sistemico = vals.length >= 3 && ruins / vals.length >= 0.7;
     return `
       <div class="item-row${sistemico ? ' is-systemic' : ''}">
-        <div class="item-score" style="color:${ratingColor(faixa)}">${score.toFixed(0)}</div>
+        <div class="item-score" style="color:${ratingTextColor(faixa)}">${score.toFixed(0)}</div>
         <div class="item-name">${escapeHtml(m.label)}<span class="item-block">nº ${m.n} · ${escapeHtml(m.bloco)}${sistemico ? ' · sistêmico' : ''}</span></div>
         <div class="item-mini">${mini}</div>
         <div class="item-repeat"><b>${ruins}/${vals.length}</b>ruim ou pior</div>
@@ -1702,11 +2249,13 @@ function setView(view){
   state.view = view;
   document.getElementById('viewFreq').hidden = view !== 'freq';
   document.getElementById('viewQual').hidden = view !== 'qual';
-  const tf = document.getElementById('tabFreq'), tq = document.getElementById('tabQual');
-  tf.classList.toggle('active', view === 'freq');
-  tq.classList.toggle('active', view === 'qual');
-  tf.setAttribute('aria-selected', String(view === 'freq'));
-  tq.setAttribute('aria-selected', String(view === 'qual'));
+  document.getElementById('viewSaude').hidden = view !== 'saude';
+  const abas = { freq: 'tabFreq', qual: 'tabQual', saude: 'tabSaude' };
+  Object.entries(abas).forEach(([v, id]) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', view === v);
+    el.setAttribute('aria-selected', String(view === v));
+  });
   renderAll();
 }
 
@@ -1785,6 +2334,7 @@ function buildAuditRecords(headerCells, dataRows){
   // quando o formulário foi preenchido — que pode ser de madrugada ou no dia
   // seguinte. Existindo as duas, o dia da auditoria é o que vale.
   const idxData = header.findIndex(h => h === 'DATA');
+  const idxFim = header.findIndex(h => h.includes('CONCLUSAO'));
   const idxOperacao = header.findIndex(h => h.includes('OPERACAO'));
   const idxMaquina = header.findIndex(h => h.includes('MAQUINA'));
   const idxCiclo = header.findIndex(h => h.includes('QUALCICLO'));
@@ -1835,6 +2385,12 @@ function buildAuditRecords(headerCells, dataRows){
       id,
       ts: ts.toISOString(),
       tsPreenchimento: tsPreenchimento.toISOString(),
+      tsConclusao: (() => {
+        if (idxFim < 0) return null;
+        const v = cells[idxFim];
+        const d = v instanceof Date ? v : parseFlexibleDate(v);
+        return (d && !isNaN(d.getTime())) ? d.toISOString() : null;
+      })(),
       dataDeclarada: usouData,
       auditorMatricula,
       auditadoMatricula: idxAuditado >= 0 ? (normMatricula(cells[idxAuditado]) || null) : null,
@@ -2202,6 +2758,10 @@ async function initDb(){
       definirFonte('erro', String(e.message || e).slice(0, 90));
       rebuildDerivedAndRender();
     }
+  } else if (SUPABASE_URL && !SUPABASE_KEY){
+    // endereço preenchido e chave vazia = configuração pela metade. Dizer só
+    // "salvo neste navegador" esconde que faltou UM passo para tudo sincronizar.
+    definirFonte('semchave');
   } else {
     definirFonte(savedAudits ? 'navegador' : 'base');
   }
@@ -2371,13 +2931,16 @@ document.getElementById('importAuditsFileBtn').addEventListener('click', () => d
 document.getElementById('importAuditsFile').addEventListener('change', handleAuditsFileSelect);
 document.getElementById('tabFreq').addEventListener('click', () => setView('freq'));
 document.getElementById('tabQual').addEventListener('click', () => setView('qual'));
+document.getElementById('tabSaude').addEventListener('click', () => setView('saude'));
 // setas navegam entre as abas, como se espera de um tablist
 document.querySelector('.view-tabs').addEventListener('keydown', (e) => {
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
   e.preventDefault();
-  const proxima = state.view === 'freq' ? 'qual' : 'freq';
+  const ordem = ['freq', 'qual', 'saude'];
+  const passo = e.key === 'ArrowRight' ? 1 : -1;
+  const proxima = ordem[(ordem.indexOf(state.view) + passo + ordem.length) % ordem.length];
   setView(proxima);
-  document.getElementById(proxima === 'freq' ? 'tabFreq' : 'tabQual').focus();
+  document.getElementById({ freq: 'tabFreq', qual: 'tabQual', saude: 'tabSaude' }[proxima]).focus();
 });
 document.getElementById('backupBtn').addEventListener('click', handleBackup);
 document.getElementById('restoreBtn').addEventListener('click', handleRestore);
