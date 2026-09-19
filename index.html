@@ -1046,7 +1046,7 @@ textarea:focus-visible, table.log th:focus-visible {
     </div>
   </section>
 
-  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS<br><span class="build-stamp">versão 19/09/2026 10:44</span></footer>
+  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS<br><span class="build-stamp">versão 19/09/2026 10:49</span></footer>
 </div>
 
 <div class="viz-tooltip" id="tooltip"></div>
@@ -2966,11 +2966,14 @@ document.getElementById('mobileSortSelect').addEventListener('change', (e) => {
    de verdade do time, em troca de nada.
 --------------------------------------------------------------------------- */
 document.addEventListener('contextmenu', (e) => {
-  // 1. dentro de campo de texto o menu precisa aparecer: é por ele que se cola
-  //    a planilha exportada do Forms na importação
+  // Única exceção: dentro de campo de texto o menu PRECISA aparecer, porque é
+  // por ele que se cola a planilha exportada do Forms na importação. Bloquear
+  // aqui quebraria a entrada de dados do painel.
+  //
+  // (A exceção para texto selecionado foi removida a pedido. Vale lembrar que
+  // o item "Inspecionar" continua a um F12 de distância, e pelo menu do próprio
+  // Chrome, que nenhum site consegue bloquear — isto é cosmético.)
   if (e.target.closest('input, textarea, select')) return;
-  // 2. em cima de texto selecionado também: é como se copia uma matrícula da tabela
-  if (String(window.getSelection() || '').trim()) return;
   e.preventDefault();
 });
 
