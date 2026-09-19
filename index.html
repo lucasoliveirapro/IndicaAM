@@ -1046,7 +1046,7 @@ textarea:focus-visible, table.log th:focus-visible {
     </div>
   </section>
 
-  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS<br><span class="build-stamp">versão 18/09/2026 23:02</span></footer>
+  <footer class="foot">Painel de Gemba AM · dados carregados a partir do formulário de auditoria SIS<br><span class="build-stamp">versão 19/09/2026 10:44</span></footer>
 </div>
 
 <div class="viz-tooltip" id="tooltip"></div>
@@ -2949,6 +2949,38 @@ document.getElementById('mobileSortSelect').addEventListener('change', (e) => {
   const [key, dir] = e.target.value.split(':');
   state.sort.key = key; state.sort.dir = dir;
   renderTable(computeFacets());
+});
+
+/* ---------------------------------------------------------------------------
+   Bloqueio de botão direito e Ctrl+U.
+   
+   ATENÇÃO, para quem mexer nisso depois: isto NÃO protege o código nem os
+   dados. Quando a página abre, o navegador já baixou o arquivo inteiro para
+   a máquina de quem está olhando. Continuam lendo tudo por 'view-source:' na
+   barra de endereço, por curl, pelo devtools, ou simplesmente desligando o
+   JavaScript — que mata este bloqueio junto. É um incômodo para o curioso
+   casual, e só isso. Se a intenção for proteger de verdade os nomes e
+   matrículas, o caminho é exigir login e travar o RLS no Supabase.
+   
+   Por isso as duas exceções abaixo: sem elas o bloqueio atrapalha o trabalho
+   de verdade do time, em troca de nada.
+--------------------------------------------------------------------------- */
+document.addEventListener('contextmenu', (e) => {
+  // 1. dentro de campo de texto o menu precisa aparecer: é por ele que se cola
+  //    a planilha exportada do Forms na importação
+  if (e.target.closest('input, textarea, select')) return;
+  // 2. em cima de texto selecionado também: é como se copia uma matrícula da tabela
+  if (String(window.getSelection() || '').trim()) return;
+  e.preventDefault();
+});
+
+document.addEventListener('keydown', (e) => {
+  // só Ctrl+U puro. Ctrl+C, Ctrl+V, Ctrl+F e Ctrl+A seguem funcionando.
+  if (!e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return;
+  if ((e.key || '').toLowerCase() !== 'u') return;
+  // no Mac e em alguns campos Ctrl+U apaga o texto da linha — não sequestrar isso
+  if (e.target.closest('input, textarea')) return;
+  e.preventDefault();
 });
 
 initDb();
